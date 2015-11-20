@@ -1,0 +1,25 @@
+{
+  "name": "minercharts",
+  "version": "0.0.0",
+  "description": "WebUI for the Data-Miner of SubCat",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:podsi/minercharts.git"
+  },
+  "keywords": [
+    "data",
+    "mining",
+    "miner",
+    "charts"
+  ],
+  "author": "podsi",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/podsi/minercharts/issues"
+  },
+  "homepage": "https://github.com/podsi/minercharts"
+}
