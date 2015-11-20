@@ -21,5 +21,8 @@
   "bugs": {
     "url": "https://github.com/podsi/minercharts/issues"
   },
-  "homepage": "https://github.com/podsi/minercharts"
+  "homepage": "https://github.com/podsi/minercharts",
+  "dependencies": {
+    "express": "^4.13.3"
+  }
 }
