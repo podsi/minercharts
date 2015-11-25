@@ -43,11 +43,6 @@ router.get('/', function(req, res, next) {
     + "   Commits.project = ?)"
     + " - (SELECT COUNT(*) FROM Commits, CommitCategories WHERE Commits.id = CommitCategories.commitId AND Commits.project = ?)";
 
-  db.all( "SELECT * FROM Users", [], function( err, users ) {
-    console.log( users );
-  });
-
-
   db.serialize( function( ) {
     db.all( sql, [ project, project, commitDict, project, project ], function( err, cats ) {
       if( err ) {
