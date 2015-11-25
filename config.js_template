@@ -4,6 +4,7 @@ config.express = {
   port: process.env.PORT || 3000
 };
 
+// sqlite db is used
 config.db = {
-  path: "./../VALADOC.db"
+  path: "./../yourdb.db"
 };
