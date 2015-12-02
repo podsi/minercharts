@@ -4,13 +4,45 @@
     <title>{{title}}</title>
     <script type='text/javascript' src='/vendor/javascripts/jquery-1.11.3.min.js'></script>
     <script type="text/javascript" src='/vendor/javascripts/highcharts/highcharts.js'></script>
+    <script type="text/javascript" src='/vendor/javascripts/highcharts/modules/exporting.js'></script>
+    <script type='text/javascript' src='/node_modules/handlebars/dist/handlebars.min.js'></script>
     <script type='text/javascript' src='/node_modules/bootstrap/dist/js/bootstrap.min.js'></script>
+    <script type='text/javascript' src='/node_modules/lodash/index.js'></script>
+
+    <script type="text/javascript" src="/javascripts/minercharts.js"></script>
+    <script type="text/javascript" src="/javascripts/helper/charts.js"></script>
 
     <link rel='stylesheet' href='/stylesheets/style.css' />
     <link rel='stylesheet' href='/node_modules/bootstrap/dist/css/bootstrap.min.css' />
   </head>
   <body>
-    <div class="row">
+    <nav class="navbar navbar-inverse navbar-fixed-top">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".sidebar-navbar-collapse">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <span class="navbar-brand"><a href="/">Minercharts</a></span>
+        </div>
+        <div class="navbar-collapse collapse sidebar-navbar-collapse">
+          <ul id="mc-main-nav" class="nav navbar-nav">
+            <li class="{{ovactive}}"><a href="/">Overview</a></li>
+            <li class="{{smactive}}"><a href="/sentiments">Sentiments</a></li>
+            <li class="{{procmactive}}"><a href="/processmetrics">Process metrics</a></li>
+            <li class="{{prodmactive}}"><a href="/productmetrics">Product metrics</a></li>
+            <li class="{{upactive}}"><a href="/userprofiles">User Profile</a></li>
+          </ul>
+        </div><!--/.nav-collapse -->
+      </div>
+    </nav>
+
+    <div class="row" style="padding-top: 20px !important;">
+      {{> settings}}
+
+    {{!-- <div class="row">
       <div class="col-sm-2">
         <div class="sidebar-nav">
           <div class="navbar navbar-default" role="navigation">
@@ -34,12 +66,20 @@
             </div><!--/.nav-collapse -->
           </div>
         </div>
-      </div>
-      <div class="col-sm-10">
+      </div> --}}
+
+      <div class="col-md-9">
         {{{body}}}
       </div>
     </div>
 
 
+    <script type="text/javascript">
+
+      $(function( ) {
+        MC.start( );
+      } );
+
+    </script>
   </body>
 </html>

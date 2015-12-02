@@ -1,6 +1,32 @@
-<h1>{{title}}</h1>
-<p>Welcome to {{title}}</p>
+<script type="text/javascript" src="/javascripts/modules/overview.js"></script>
 
-{{#each cats}}
-  <p>{{category}}: {{amount}}</p>
-{{/each}}
+<div class="page-header">
+  <h3>Overview <small>Minercharts powered by SubCats</small></h3>
+</div>
+
+<div class="container-fluid">
+  <div class="panel panel-default">
+    <div class="panel-heading">
+      <h3 class="panel-title">Data for Categories</h3>
+    </div>
+    <div class="panel-body">
+      <div class="row">
+        <div id="commit-cats" class="col-md-6"></div>
+        <div id="bug-cats" class="col-md-6"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel panel-default">
+    <div class="panel-heading">
+      <h3 class="panel-title">Data for Un-/Linked</h3>
+    </div>
+    <div class="panel-body">
+      <div class="row">
+        <div id="linked-commits" class="col-md-6"></div>
+        <div id="linked-bugs" class="col-md-6"></div>
+      </div>
+    </div>
+  </div>
+
+</div>

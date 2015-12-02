@@ -7,13 +7,13 @@
 var app = require('../app');
 var debug = require('debug')('minercharts:server');
 var http = require('http');
-var config = require('../config');
+var config = require('../config/config');
 
 /**
  * Get port from environment and store in Express.
  */
 
-var port = normalizePort(config.express.port);
+var port = normalizePort( config.EXPRESS.port );
 app.set('port', port);
 
 /**

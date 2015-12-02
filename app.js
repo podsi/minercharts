@@ -5,9 +5,30 @@ var logger = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 
+// load the modern build
+var _ = require('lodash');
+
+// hbs --> handlebars for template engine
+var hbs = require('hbs');
+
+var fs    = require('fs'),
+    nconf = require('nconf');
+var config = require('./config/config');
+
 var routes = require('./routes');
 
 var app = express();
+
+// configuration
+nconf.env().argv();
+
+//
+// Values in `settings.json`
+//
+nconf.file( 'ui', './config/ui.json');
+
+hbs.registerPartials(__dirname + config.DEFAULTS.partialsDir);
+require("./helpers/hbs_helpers").register(hbs.handlebars);
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
@@ -20,7 +41,9 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
+app.use('/vendor', express.static(path.join(__dirname, '/vendor')));
 app.use('/node_modules', express.static(path.join(__dirname, '/node_modules')));
+app.use('/helpers', express.static(path.join(__dirname, '/helpers')));
 
 app.use( routes );
 

@@ -1,0 +1,12 @@
+{
+  "defaults": {
+    "partialsDir": "/views/partials",
+    "uiSettingsPath": "./config/ui.json"
+  },
+  "express": {
+    "port": 3000
+  },
+  "db": {
+    "path": "./../VALADOC.db"
+  }
+}

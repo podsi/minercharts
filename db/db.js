@@ -1,8 +1,8 @@
 var sqlite3 = require('sqlite3').verbose();
 var fs = require('fs');
-var config = require('../config');
+var config = require('../config/config');
 
-var dbFile = config.db.path;
+var dbFile = config.DB.path;
 
 fs.exists(dbFile, function(exists) {
 	if(!exists) {
@@ -38,6 +38,10 @@ module.exports = {
 
   serialize: function( fn ) {
     db.serialize( fn );
+  },
+
+  parallelize: function( fn ) {
+    db.parallelize( fn );
   }
 };
 
