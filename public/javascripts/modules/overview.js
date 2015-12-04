@@ -16,11 +16,6 @@ window.MC.Overview = (function( $ ) {
   // };
 
   var _registerEvents = function( ) {
-    $( "#projects" ).on( "change", function( evt ) {
-      var projectId = $(this).val( );
-
-      MC.Overview.renderOverview( projectId );
-    } );
 
   };
 
@@ -48,7 +43,7 @@ window.MC.Overview = (function( $ ) {
           id: projectId
         },
 
-        success: function( data ) {
+        done: function( data ) {
           MC.Charts.createPieChart( "#commit-cats", data.commitCats );
           MC.Charts.createPieChart( "#bug-cats", data.bugCats );
 

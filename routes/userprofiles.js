@@ -15,9 +15,11 @@ router.get('/', function(req, res, next) {
     upactive: "active"
   };
 
-  _.extend( data, config.UI );
+  config.UI.load( ).then( function( uiConf ) {
+    _.extend( data, uiConf );
 
-  res.render('userprofiles', data );
+    res.render('userprofiles', data );
+  } );
 });
 
 module.exports = router;

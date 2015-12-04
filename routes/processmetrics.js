@@ -15,9 +15,11 @@ router.get('/', function(req, res, next) {
     procmactive: "active"
   };
 
-  _.extend( data, config.UI );
+  config.UI.load( ).then( function( uiConf ) {
+    _.extend( data, uiConf );
 
-  res.render('processmetrics', data );
+    res.render('processmetrics', data );
+  } );
 });
 
 module.exports = router;

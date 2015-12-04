@@ -22,6 +22,7 @@ router.use( '/userprofiles', userProfiles );
 router.use( '/sentiments', sentiments );
 router.use( '/processmetrics', processMetrics );
 router.use( '/productmetrics', productMetrics );
+router.use( '/settings', require('./settings') );
 
 var stmts = {
   allProjects: "SELECT id, product FROM Projects",
@@ -94,16 +95,18 @@ router.get('/', function(req, res, next) {
         console.log( "ERROR" );
       }
 
-      config.ui.save( "projects", projects );
+      config.UI.set( "projects", projects );
 
       var data = {
         title: "Overview",
         ovactive: "active"
       };
 
-      _.extend( data, config.UI );
+      config.UI.load( ).then( function( uiConf ) {
+        _.extend( data, uiConf );
 
-      res.render( 'index', data );
+        res.render( 'index', data );
+      } );
     } );
   } );
 
@@ -114,48 +117,49 @@ router.post('/:id', function(req, res, next) {
   project = parseInt( req.body.id, 10 );
 
   if( project < 0 ) {
-    config.ui.remove( "project" );
+    config.UI.remove( "project" );
     res.status( 404 ).send( { message: "No Project for given id " + project } );
   } else {
-    config.ui.save( "project:id", project );
+    config.UI.set( "project.id", project ).then( function( settings ) {
 
-    var commitCats = { };
-    var bugCats = { };
-    var linkedCommits = { };
-    var linkedBugs = { };
+      var commitCats = { };
+      var bugCats = { };
+      var linkedCommits = { };
+      var linkedBugs = { };
 
-    db.serialize( function( ) {
-      getCommitCats( project ).then( function( cc ) {
-        commitCats = cc;
+      db.serialize( function( ) {
+        getCommitCats( project ).then( function( cc ) {
+          commitCats = cc;
 
-        getBugCats( project ).then( function( bc ) {
-          bugCats = bc;
+          getBugCats( project ).then( function( bc ) {
+            bugCats = bc;
 
-          getLinkedCommits( project ).then( function( lc ) {
-            linkedCommits = lc;
+            getLinkedCommits( project ).then( function( lc ) {
+              linkedCommits = lc;
 
-            getLinkedBugs( project ).then( function( lb ) {
-              linkedBugs = lb;
+              getLinkedBugs( project ).then( function( lb ) {
+                linkedBugs = lb;
 
-              var data = {
-                commitCats: commitCats,
-                bugCats: bugCats,
-                linkedCommits: linkedCommits,
-                linkedBugs: linkedBugs
-              };
+                var data = {
+                  commitCats: commitCats,
+                  bugCats: bugCats,
+                  linkedCommits: linkedCommits,
+                  linkedBugs: linkedBugs
+                };
 
-              _.extend( data, config.UI );
+                _.extend( data, config.UI );
 
-              res.send( data );
+                res.send( data );
 
-            } );  // getLinkedBugs
+              } );  // getLinkedBugs
 
-          } );  // getLinkedCommits
+            } );  // getLinkedCommits
 
-        } );  // getBugCats
+          } );  // getBugCats
 
-      } );  // getCommitCats
+        } );  // getCommitCats
 
+      } );
     } );
   }
 

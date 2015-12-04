@@ -15,9 +15,11 @@ router.get('/', function(req, res, next) {
     smactive: "active"
   };
 
-  _.extend( data, config.UI );
+  config.UI.load( ).then( function( uiConf ) {
+    _.extend( data, uiConf );
 
-  res.render('sentiments', data );
+    res.render('sentiments', data );
+  } );
 });
 
 module.exports = router;

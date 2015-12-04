@@ -25,7 +25,7 @@ nconf.env().argv();
 //
 // Values in `settings.json`
 //
-nconf.file( 'ui', './config/ui.json');
+nconf.file( 'ui', config.DEFAULTS.uiSettingsPath );
 
 hbs.registerPartials(__dirname + config.DEFAULTS.partialsDir);
 require("./helpers/hbs_helpers").register(hbs.handlebars);

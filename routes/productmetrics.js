@@ -15,9 +15,11 @@ router.get('/', function(req, res, next) {
     prodmactive: "active"
   };
 
-  _.extend( data, config.UI );
+  config.UI.load( ).then( function( uiConf ) {
+    _.extend( data, uiConf );
 
-  res.render('productmetrics', data );
+    res.render('productmetrics', data );
+  } );
 });
 
 module.exports = router;
