@@ -2,11 +2,11 @@ var register = function(Handlebars) {
 
   var helpers = {
     // put all of your helpers inside this object
-    selected: function( curProject, id ) {
-      console.log( "curProject", curProject );
-      console.log( "id", id );
-      if( curProject && id ) {
-        return parseInt( curProject.id, 10 ) === parseInt( id, 10 ) ? ' selected' : '';
+
+    // this function is used to set the selection of the settings dropdowns
+    selected: function( curSelection, id ) {
+      if( curSelection && id ) {
+        return parseInt( curSelection.id, 10 ) === parseInt( id, 10 ) ? ' selected' : '';
       }
 
       return '';

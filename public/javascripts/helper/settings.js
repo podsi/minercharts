@@ -4,19 +4,24 @@ window.MC.Settings = (function($, _) {
 
   var module = {
 
-    changed: function( pathname, key, value ) {
+    changed: function( pathname, key, value, additional ) {
+      additional = additional || { };
+
       MC.ajax( {
         url: "/settings/changed",
         params: {
           pathname: pathname,
           key: key,
-          value: value
+          value: value,
+          additional: additional
         },
 
         done: function( data ) {
+          window.location.reload(true);
         }
       } );
     }
+
   };
 
   return module;

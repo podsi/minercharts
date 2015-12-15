@@ -8,21 +8,35 @@ var app = (function($) {
   var module = {
 
     start: function( ) {
-      if( MC.Overview ) {
-        MC.Overview.init( );
-      }
+      module.registerSettingsEvents( );
     },
 
-    registerEvents: function( ) {
+    registerSettingsEvents: function( ) {
       $( "#projects" ).on( "change", function( evt ) {
         var projectId = $(this).val( );
-
         var pathname = window.location.pathname;
 
         MC.Settings.changed( pathname, "project.id", projectId );
-        // MC.Overview.renderOverview( projectId );
       } );
 
+      $( "#dictionaries" ).on( "change", function( evt ) {
+        var dictId = $(this).val( );
+        var dictContext = $(this).children( "[value='" + dictId + "']" ).attr( "dict-context" );
+        var pathname = window.location.pathname;
+
+        console.log( dictContext );
+
+        MC.Settings.changed( pathname, "project.dictionary.id", dictId, {
+          "project.dictionary.context": dictContext
+        } );
+      } );
+
+      $( "#users" ).on( "change", function( evt ) {
+        var uid = $(this).val( );
+        var pathname = window.location.pathname;
+
+        MC.Settings.changed( pathname, "project.user.id", uid );
+      } );
     },
 
     ajax: function( options ) {
@@ -30,7 +44,8 @@ var app = (function($) {
 
       jQuery.ajax( {
         url: options.url,
-        data: options.params,
+        data: JSON.stringify( options.params ),
+        contentType: 'application/json',
         type: options.method,
         dataType: 'json',
         beforeSend: function( ) {

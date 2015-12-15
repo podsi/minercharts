@@ -6,6 +6,312 @@
     }
   ],
   "project": {
-    "id": 1
+    "id": 1,
+    "dictionaries": [
+      {
+        "id": 1,
+        "name": "WeightedDict",
+        "context": "src"
+      },
+      {
+        "id": 2,
+        "name": "WeightedDict",
+        "context": "bug"
+      },
+      {
+        "id": 11,
+        "name": "Dummy",
+        "context": "src"
+      }
+    ],
+    "dictionary": {
+      "id": "-1",
+      "context": "bug"
+    },
+    "users": [
+      {
+        "username": "a9016009@gmx.de André Klapper",
+        "uid": 74,
+        "iid": 20,
+        "iname": "a9016009@gmx.de André Klapper",
+        "icontext": "bug"
+      },
+      {
+        "username": "adi@roiban.ro Adi Roiban",
+        "uid": 80,
+        "iid": 6,
+        "iname": "adi@roiban.ro Adi Roiban",
+        "icontext": "bug"
+      },
+      {
+        "username": "amigadave@amigadave.com David King",
+        "uid": 117,
+        "iid": 21,
+        "iname": "amigadave@amigadave.com David King",
+        "icontext": "bug"
+      },
+      {
+        "username": "aquarichy@gmail.com Richard Schwarting",
+        "uid": 107,
+        "iid": 15,
+        "iname": "aquarichy@gmail.com Richard Schwarting",
+        "icontext": "bug"
+      },
+      {
+        "username": "bugs@kerrickstaley.com Kerrick Staley",
+        "uid": 98,
+        "iid": 25,
+        "iname": "bugs@kerrickstaley.com Kerrick Staley",
+        "icontext": "bug"
+      },
+      {
+        "username": "bugzilla@tecnocode.co.uk Philip Withnall",
+        "uid": 63,
+        "iid": 10,
+        "iname": "bugzilla@tecnocode.co.uk Philip Withnall",
+        "icontext": "bug"
+      },
+      {
+        "username": "caramba_bk@yahoo.com ",
+        "uid": 77,
+        "iid": 22,
+        "iname": "caramba_bk@yahoo.com ",
+        "icontext": "bug"
+      },
+      {
+        "username": "cickumqt@gmail.com Christopher Meng",
+        "uid": 97,
+        "iid": 31,
+        "iname": "cickumqt@gmail.com Christopher Meng",
+        "icontext": "bug"
+      },
+      {
+        "username": "desrt@desrt.ca Ryan Lortie (desrt)",
+        "uid": 115,
+        "iid": 28,
+        "iname": "desrt@desrt.ca Ryan Lortie (desrt)",
+        "icontext": "bug"
+      },
+      {
+        "username": "dueno@src.gnome.org Daiki Ueno",
+        "uid": 89,
+        "iid": 30,
+        "iname": "dueno@src.gnome.org Daiki Ueno",
+        "icontext": "bug"
+      },
+      {
+        "username": "evan@coeus-group.com Evan Nemerson",
+        "uid": 85,
+        "iid": 24,
+        "iname": "evan@coeus-group.com Evan Nemerson",
+        "icontext": "bug"
+      },
+      {
+        "username": "flo.brosch@gmail.com Florian Brosch",
+        "uid": 108,
+        "iid": 2,
+        "iname": "flo.brosch@gmail.com Florian Brosch",
+        "icontext": "bug"
+      },
+      {
+        "username": "gnome-bugzilla@uazu.net Jim Peters",
+        "uid": 114,
+        "iid": 14,
+        "iname": "gnome-bugzilla@uazu.net Jim Peters",
+        "icontext": "bug"
+      },
+      {
+        "username": "iofelben@gmail.com Ben",
+        "uid": 79,
+        "iid": 40,
+        "iname": "iofelben@gmail.com Ben",
+        "icontext": "bug"
+      },
+      {
+        "username": "jim@yorba.org Jim Nelson",
+        "uid": 65,
+        "iid": 13,
+        "iname": "jim@yorba.org Jim Nelson",
+        "icontext": "bug"
+      },
+      {
+        "username": "jjardon@gnome.org Javier Jardón (IRC: jjardon)",
+        "uid": 82,
+        "iid": 27,
+        "iname": "jjardon@gnome.org Javier Jardón (IRC: jjardon)",
+        "icontext": "bug"
+      },
+      {
+        "username": "joni@noplu.de Jonathan Rauprich",
+        "uid": 110,
+        "iid": 5,
+        "iname": "joni@noplu.de Jonathan Rauprich",
+        "icontext": "bug"
+      },
+      {
+        "username": "jryan@curious-computing.com Jonathan Ryan",
+        "uid": 75,
+        "iid": 16,
+        "iname": "jryan@curious-computing.com Jonathan Ryan",
+        "icontext": "bug"
+      },
+      {
+        "username": "jussi.kukkonen@intel.com Jussi Kukkonen",
+        "uid": 86,
+        "iid": 36,
+        "iname": "jussi.kukkonen@intel.com Jussi Kukkonen",
+        "icontext": "bug"
+      },
+      {
+        "username": "kwm@FreeBSD.org Koop Mast (kwm)",
+        "uid": 109,
+        "iid": 35,
+        "iname": "kwm@FreeBSD.org Koop Mast (kwm)",
+        "icontext": "bug"
+      },
+      {
+        "username": "lists.ban@herbesfolles.org Colomban Wendling",
+        "uid": 71,
+        "iid": 17,
+        "iname": "lists.ban@herbesfolles.org Colomban Wendling",
+        "icontext": "bug"
+      },
+      {
+        "username": "lucabru@src.gnome.org Luca Bruno",
+        "uid": 90,
+        "iid": 11,
+        "iname": "lucabru@src.gnome.org Luca Bruno",
+        "icontext": "bug"
+      },
+      {
+        "username": "mail@jensge.org Jens Georg",
+        "uid": 104,
+        "iid": 26,
+        "iname": "mail@jensge.org Jens Georg",
+        "icontext": "bug"
+      },
+      {
+        "username": "mcatanzaro@gnome.org Michael Catanzaro",
+        "uid": 96,
+        "iid": 32,
+        "iname": "mcatanzaro@gnome.org Michael Catanzaro",
+        "icontext": "bug"
+      },
+      {
+        "username": "misterhat144@gmail.com ",
+        "uid": 91,
+        "iid": 39,
+        "iname": "misterhat144@gmail.com ",
+        "icontext": "bug"
+      },
+      {
+        "username": "murrayc@murrayc.com Murray Cumming",
+        "uid": 64,
+        "iid": 8,
+        "iname": "murrayc@murrayc.com Murray Cumming",
+        "icontext": "bug"
+      },
+      {
+        "username": "name.is.carl@gmail.com Carl",
+        "uid": 88,
+        "iid": 19,
+        "iname": "name.is.carl@gmail.com Carl",
+        "icontext": "bug"
+      },
+      {
+        "username": "nicolas.laplante@gmail.com Nicolas Laplante",
+        "uid": 83,
+        "iid": 38,
+        "iname": "nicolas.laplante@gmail.com Nicolas Laplante",
+        "icontext": "bug"
+      },
+      {
+        "username": "oliver.steven@gmail.com ",
+        "uid": 84,
+        "iid": 23,
+        "iname": "oliver.steven@gmail.com ",
+        "icontext": "bug"
+      },
+      {
+        "username": "palango@gmx.de Paul Lange",
+        "uid": 92,
+        "iid": 3,
+        "iname": "palango@gmx.de Paul Lange",
+        "icontext": "bug"
+      },
+      {
+        "username": "pancake@youterm.com pancake",
+        "uid": 105,
+        "iid": 29,
+        "iname": "pancake@youterm.com pancake",
+        "icontext": "bug"
+      },
+      {
+        "username": "ptitjes@free.fr Didier \"Ptitjes\"",
+        "uid": 102,
+        "iid": 1,
+        "iname": "ptitjes@free.fr Didier \"Ptitjes\"",
+        "icontext": "bug"
+      },
+      {
+        "username": "rgs@itevenworks.net Raul Gutierrez Segales",
+        "uid": 70,
+        "iid": 12,
+        "iname": "rgs@itevenworks.net Raul Gutierrez Segales",
+        "icontext": "bug"
+      },
+      {
+        "username": "ricotz@t-online.de Rico Tzschichholz",
+        "uid": 68,
+        "iid": 33,
+        "iname": "ricotz@t-online.de Rico Tzschichholz",
+        "icontext": "bug"
+      },
+      {
+        "username": "sre@ring0.de Sebastian Reichel",
+        "uid": 112,
+        "iid": 4,
+        "iname": "sre@ring0.de Sebastian Reichel",
+        "icontext": "bug"
+      },
+      {
+        "username": "techlivezh@gnome.org Techlive Zheng",
+        "uid": 81,
+        "iid": 34,
+        "iname": "techlivezh@gnome.org Techlive Zheng",
+        "icontext": "bug"
+      },
+      {
+        "username": "techwiz96@gmail.com Nathan Lowe",
+        "uid": 106,
+        "iid": 37,
+        "iname": "techwiz96@gmail.com Nathan Lowe",
+        "icontext": "bug"
+      },
+      {
+        "username": "travis.reitter@collabora.co.uk Travis Reitter",
+        "uid": 73,
+        "iid": 9,
+        "iname": "travis.reitter@collabora.co.uk Travis Reitter",
+        "icontext": "bug"
+      },
+      {
+        "username": "uzytkownik2@gmail.com Maciej Piechotka",
+        "uid": 95,
+        "iid": 18,
+        "iname": "uzytkownik2@gmail.com Maciej Piechotka",
+        "icontext": "bug"
+      },
+      {
+        "username": "yaneti@declera.com Yanko Kaneti",
+        "uid": 99,
+        "iid": 7,
+        "iname": "yaneti@declera.com Yanko Kaneti",
+        "icontext": "bug"
+      }
+    ],
+    "user": {
+      "id": "6"
+    }
   }
 }

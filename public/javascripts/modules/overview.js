@@ -15,15 +15,9 @@ window.MC.Overview = (function( $ ) {
 
   // };
 
-  var _registerEvents = function( ) {
-
-  };
-
   var module = {
     init: function( ) {
       var _this = this;
-
-      _registerEvents( );
 
       module.renderOverview( );
     },

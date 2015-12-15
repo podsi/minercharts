@@ -10,6 +10,7 @@ var config = require('../config/config');
 var _ = require('lodash');
 
 var db = require( '../db/db' );
+var queries = require( '../db/queries' );
 
 // require all routes (controllers)
 var userProfiles = require('./userprofiles');
@@ -24,86 +25,21 @@ router.use( '/processmetrics', processMetrics );
 router.use( '/productmetrics', productMetrics );
 router.use( '/settings', require('./settings') );
 
-var stmts = {
-  allProjects: "SELECT id, product FROM Projects",
-
-  commitCats: "SELECT "
-    + "   Categories.name as label, COUNT(*) as amount "
-    + "FROM "
-    + "   Commits, CommitCategories, Categories, Dictionary "
-    + "WHERE "
-    + "   Commits.id=CommitCategories.commitId "
-    + "   AND Commits.project = ?"
-    + "   AND CommitCategories.category=Categories.id "
-    + "   AND Categories.dictionary=Dictionary.id "
-    + "   AND Dictionary.project = ? "
-    + "   AND Categories.dictionary = ? "
-    + "GROUP BY "
-    + "   CommitCategories.category"
-    + " UNION "
-    + "SELECT "
-    + "   'uncategorised', (SELECT COUNT(*) "
-    + "FROM "
-    + "   Commits "
-    + "WHERE "
-    + "   Commits.project = ?)"
-    + " - (SELECT COUNT(*) FROM Commits, CommitCategories WHERE Commits.id = CommitCategories.commitId AND Commits.project = ?)",
-
-  bugCats: "SELECT "
-    + "   Categories.name as label, COUNT(*) as amount "
-    + "FROM "
-    + "   BugCategories, Categories, Dictionary, Components, Bugs "
-    + "WHERE "
-    + "   Bugs.id = BugCategories.bug "
-    + "   AND Bugs.component = Components.id "
-    + "   AND Components.project = ? "
-    + "   AND BugCategories.category=Categories.id "
-    + "   AND Categories.dictionary=Dictionary.id "
-    + "   AND Dictionary.project = ? "
-    // + "   AND Categories.dictionary= ? "
-    + "GROUP BY BugCategories.category "
-    + "UNION SELECT 'uncategorised', (SELECT COUNT(*) FROM Bugs, Components WHERE Bugs.component = Components.id AND Components.project = ?)"
-    + " - (SELECT COUNT(*) FROM Bugs, Components, BugCategories WHERE Bugs.component=Components.id AND Components.project = ? AND BugCategories.bug = Bugs.id)",
-
-  linkedCommits: "SELECT "
-    + "  'Linked' as label,"
-    + "   (SELECT COUNT(*) FROM BugfixCommit, Commits WHERE BugfixCommit.commitId=Commits.id AND Commits.project = ?) amount "
-    + "UNION "
-    + "   SELECT 'Unlinked',"
-    + "     (SELECT COUNT(*) FROM Commits WHERE project = ?)"
-    + "     - "
-    + "     (SELECT COUNT(*) FROM BugfixCommit, Commits WHERE BugfixCommit.commitId = Commits.id AND Commits.project = ?)",
-
-  linkedBugs: "SELECT "
-    + "   'Linked' as label,"
-    + "   (SELECT COUNT(*) FROM BugfixCommit, Bugs, Components WHERE BugfixCommit.bug=Bugs.id AND Bugs.component=Components.id AND Components.project = ?) as amount "
-    + "UNION "
-    + "   SELECT 'Unlinked',"
-    + "     (SELECT COUNT(*) FROM Bugs, Components WHERE Bugs.component=Components.id AND Components.project = ?)"
-    + "     - "
-    + "     (SELECT COUNT(*) FROM BugfixCommit, Bugs, Components WHERE BugfixCommit.bug = Bugs.id AND Bugs.component=Components.id AND Components.project = ?)"
-};
-
-var project = "1";
-var commitDict = "1";
-
 router.get('/', function(req, res, next) {
   db.serialize( function( ) {
-    db.all( stmts.allProjects, [ ], function( err, projects ) {
+    db.all( queries.SELECT_ALL_PROJECTS, [ ], function( err, projects ) {
       if( err ) {
         console.log( err );
         console.log( "ERROR" );
       }
 
-      config.UI.set( "projects", projects );
+      config.UI.set( { "projects": projects } ).then( function( settings ) {
+        var data = {
+          title: "Overview",
+          ovactive: "active"
+        };
 
-      var data = {
-        title: "Overview",
-        ovactive: "active"
-      };
-
-      config.UI.load( ).then( function( uiConf ) {
-        _.extend( data, uiConf );
+        _.extend( data, settings );
 
         res.render( 'index', data );
       } );
@@ -120,7 +56,7 @@ router.post('/:id', function(req, res, next) {
     config.UI.remove( "project" );
     res.status( 404 ).send( { message: "No Project for given id " + project } );
   } else {
-    config.UI.set( "project.id", project ).then( function( settings ) {
+    config.UI.set( { "project.id": project } ).then( function( settings ) {
 
       var commitCats = { };
       var bugCats = { };
@@ -128,7 +64,7 @@ router.post('/:id', function(req, res, next) {
       var linkedBugs = { };
 
       db.serialize( function( ) {
-        getCommitCats( project ).then( function( cc ) {
+        getCommitCats( project, settings ).then( function( cc ) {
           commitCats = cc;
 
           getBugCats( project ).then( function( bc ) {
@@ -147,7 +83,7 @@ router.post('/:id', function(req, res, next) {
                   linkedBugs: linkedBugs
                 };
 
-                _.extend( data, config.UI );
+                _.extend( data, settings );
 
                 res.send( data );
 
@@ -165,9 +101,32 @@ router.post('/:id', function(req, res, next) {
 
 });
 
-function getCommitCats( project ) {
+function getCommitCats( project, settings ) {
   var commitCatsPromise = new Promise( function( resolve, reject ) {
-    db.all( stmts.commitCats, [ project, project, commitDict, project, project ], function( err, cats ) {
+    var commitDict = "";
+    var committer = "";
+    var query = "";
+    var params = [ ];
+
+    if( settings.project && settings.project.dictionary ) {
+      commitDict = settings.project.dictionary.id || "";
+      commitDict = commitDict < 0 ? null : commitDict;
+    }
+
+    if( settings.project && settings.project.user ) {
+      committer = settings.project.user.id || "";
+      committer = committer < 0 ? null : committer;
+    }
+
+    if( commitDict == null || committer == null ) {
+      params = [ project, project, project, project ];
+      query = queries.SELECT_ALL_COMMIT_CATEGORIES;
+    } else {
+      params = [ project, project, commitDict, committer, project, project ];
+      query = queries.SELECT_COMMIT_CATEGORIES_BY_DICT_AND_COMMITTER;
+    }
+
+    db.all( query, params, function( err, cats ) {
       if( err ) {
         console.log( err );
         reject( err );
@@ -190,7 +149,7 @@ function getCommitCats( project ) {
           data: parsedCats.data
         },
         title: {
-          text: "Commit Categories (" + parsedCats.total + ")"
+          text: "Commits by Categories (" + parsedCats.total + ")"
         }
       };
 
@@ -203,7 +162,7 @@ function getCommitCats( project ) {
 
 function getBugCats( project ) {
   var bugCatsPromise = new Promise( function( resolve, reject ) {
-    db.all( stmts.bugCats, [ project, project, project, project ], function( err, cats ) {
+    db.all( queries.SELECT_BUG_CATEGORIES, [ project, project, project, project ], function( err, cats ) {
       if( err ) {
         console.log( err );
         reject( err );
@@ -217,7 +176,7 @@ function getBugCats( project ) {
           data: parsedCats.data
         },
         title: {
-          text: "Bug Categories (" + parsedCats.total + ")"
+          text: "Bugs by Categories (" + parsedCats.total + ")"
         }
       };
 
@@ -230,7 +189,7 @@ function getBugCats( project ) {
 
 function getLinkedCommits( project ) {
   var linkedCommitsPromise = new Promise( function( resolve, reject ) {
-    db.all( stmts.linkedCommits, [ project, project, project ], function( err, lc ) {
+    db.all( queries.SELECT_LINKED_COMMITS, [ project, project, project ], function( err, lc ) {
       if( err ) {
         console.log( err );
         reject( err );
@@ -244,7 +203,7 @@ function getLinkedCommits( project ) {
           data: parsed.data
         },
         title: {
-          text: "Linked Commits (" + parsed.total + ")"
+          text: "Linked statistics for Commits (" + parsed.total + ")"
         }
       };
 
@@ -257,7 +216,7 @@ function getLinkedCommits( project ) {
 
 function getLinkedBugs( project ) {
   var linkedBugsPromise = new Promise( function( resolve, reject ) {
-    db.all( stmts.linkedBugs, [ project, project, project ], function( err, lc ) {
+    db.all( queries.SELECT_LINKED_BUGS, [ project, project, project ], function( err, lc ) {
       if( err ) {
         console.log( err );
         reject( err );
@@ -271,7 +230,7 @@ function getLinkedBugs( project ) {
           data: parsed.data
         },
         title: {
-          text: "Linked Commits (" + parsed.total + ")"
+          text: "Linked statistics for Bugs (" + parsed.total + ")"
         }
       };
 

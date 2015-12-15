@@ -5,17 +5,15 @@
       <h3 class="panel-title">Settings</h3>
     </div>
     <div class="panel-body">
-      <form class="form-horizontal">
-        <div class="form-group">
-          <label for="projects" class="col-sm-2 control-label">Project</label>
-          <div class="col-sm-10">
-            <select id="projects" class="form-control">
-                <option value="-1">Choose Project</option>
-              {{#each projects}}
-                <option value="{{id}}" {{selected ../project id}}>{{product}}</option>
-              {{/each}}
-            </select>
-          </div>
+      <form>
+        <div class="form-group form-group-sm">
+          <label for="projects" class="">Project</label>
+          <select id="projects" class="form-control">
+              <option value="-1">Choose Project</option>
+            {{#each projects}}
+              <option value="{{id}}" {{selected ../project id}}>{{product}}</option>
+            {{/each}}
+          </select>
           {{!-- <div class="col-md-8">
             <div class="dropdown">
               <button class="btn btn-default dropdown-toggle" type="button" id="projectDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
@@ -30,6 +28,28 @@
             </div>
           </div> --}}
         </div>
+        {{#if project.dictionaries}}
+          <div class="form-group form-group-sm">
+            <label for="dictionaries" class="">Dictionary</label>
+            <select id="dictionaries" class="form-control">
+                <option value="-1">Choose Dictionary</option>
+              {{#each project.dictionaries}}
+                <option value="{{id}}" dict-context={{context}} {{selected ../project.dictionary this.id}}>{{name}} ({{context}})</option>
+              {{/each}}
+            </select>
+          </div>
+        {{/if}}
+        {{#if project.users}}
+          <div class="form-group form-group-sm">
+            <label for="users" class="">Users</label>
+            <select id="users" class="form-control">
+                <option value="-1">Choose User</option>
+              {{#each project.users}}
+                <option value="{{iid}}" {{selected ../project.user this.iid}}>{{iname}} ({{icontext}})</option>
+              {{/each}}
+            </select>
+          </div>
+        {{/if}}
       </form>
     </div>
   </div>
