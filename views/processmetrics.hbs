@@ -1,4 +1,10 @@
-<h1>{{title}}</h1>
-<p>{{subtitle}}</p>
+<script type="text/javascript" src="/javascripts/modules/processmetrics.js"></script>
+<script type="text/javascript">
+$(function( ) {
+  MC.Processmetrics.init( );
+});
+</script>
 
-<div id="process"></div>
+<div id="processmetrics-panel">
+  {{> processmetrics_tabs}}
+</div>

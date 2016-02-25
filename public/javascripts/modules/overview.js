@@ -2,24 +2,19 @@ window.MC = window.MC || {};
 
 window.MC.Overview = (function( $ ) {
 
-  // var _registerEvents = function( ) {
-  //   $( "#ovprojects" ).on( "click", "a", function( evt ) {
-  //     var projectId = $(this).closest( "li" ).val( );
-
-  //     var text = $(this).html();
-  //     var htmlText = text + ' <span class="caret"></span>';
-  //     $(this).closest('.dropdown').find('.dropdown-toggle').html(htmlText);
-
-  //     MC.Overview.renderOverview( projectId );
-  //   } );
-
-  // };
-
   var module = {
     init: function( ) {
-      var _this = this;
+      var currentView = { nav: "overview" };
+      MC.Settings.write( "currentView", currentView );
 
-      module.renderOverview( );
+      var project = MC.Settings.read( "project" );
+      var pid;
+
+      if( project ) {
+        pid = project.id || null;
+      }
+
+      module.renderOverview( pid );
     },
 
     renderOverview: function( projectId ) {
@@ -32,21 +27,44 @@ window.MC.Overview = (function( $ ) {
       }
 
       MC.ajax( {
-        url: "/index",
+        url: "/project_overview",
         params: {
-          id: projectId
+          id: projectId,
+          project: MC.storage.getObj( "project" ) || { }
         },
 
         done: function( data ) {
-          MC.Charts.createPieChart( "#commit-cats", data.commitCats );
-          MC.Charts.createPieChart( "#bug-cats", data.bugCats );
+          MC.registerSettingsEvents( );
 
-          MC.Charts.createPieChart( "#linked-commits", data.linkedCommits );
-          MC.Charts.createPieChart( "#linked-bugs", data.linkedBugs );
-
-          // $( "#commit-cats" ).html( data.partial );
+          module.displayCharts( data );
         }
       } );
+    },
+
+    displayCharts: function( data ) {
+      if( data.commitCats ) {
+        MC.Charts.createPieChart( "#commit-cats", data.commitCats );
+      } else {
+        $( "#commit-cats" ).remove( );
+      }
+
+      if( data.bugCats ) {
+        MC.Charts.createPieChart( "#bug-cats", data.bugCats );
+      } else {
+        $( "#bug-cats" ).remove( );
+      }
+
+      if( data.linkedCommits ) {
+        MC.Charts.createPieChart( "#linked-commits", data.linkedCommits );
+      } else {
+        $( "#linked-commits" ).remove( );
+      }
+
+      if( data.linkedBugs ) {
+        MC.Charts.createPieChart( "#linked-bugs", data.linkedBugs );
+      } else {
+        $( "#linked-bugs" ).remove( );
+      }
     },
 
     resetView: function( ) {

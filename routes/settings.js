@@ -2,6 +2,9 @@ var express = require('express');
 var router = express.Router();
 var nconf = require('nconf');
 var config = require('../config/config');
+var hbs = require('hbs');
+var Util = require('../helpers/util');
+var Promise = require('bluebird');
 
 // load the modern build
 var _ = require('lodash');
@@ -16,6 +19,17 @@ router.post('/changed', function(req, res, next) {
   var value = req.body.value;
   var additional = req.body.additional;
 
+  var project = req.body.project;
+  var currentView = req.body.currentView;
+
+  console.log( "CHANGED SETTINGS============" );
+  console.log( req.body.uiSettings.globalSettings );
+
+  var globalSettings = {
+    project: project,
+    currentView: currentView
+  };
+
   var uiOptions = { };
   uiOptions[ key ] = value;
 
@@ -27,44 +41,73 @@ router.post('/changed', function(req, res, next) {
 
   if( key === "project.id" ) {
     if( value < 0 ) {
-      config.UI.remove( "project" );
       res.status( 200 ).send( { message: "No Project for given id " + value } );
     } else {
-      config.UI.set( uiOptions ).then( function( settings ) {
-        changedProject( settings.project.id ).then( function( newSettings ) {
-          changedSettings( req, res, newSettings );
-        } );
+      // var yearsP = loadProjectYears( value );
+      var projectsP = config.UI.get( "projects" );
+      var dictP = loadDictionaries( value );
+
+      Promise.all( [ projectsP, dictP/*, yearsP*/ ] ).then( values => {
+
+        var projects = values[ 0 ];
+        var dicts = values[ 1 ];
+        // var years = values[ 2 ];
+
+        _.extend( globalSettings, { projects: projects } );
+        globalSettings.project.dictionaries = dicts;
+        // globalSettings.project.years = years;
+
+        changedSettings( req, res, globalSettings );
       } );
+
     }
   } else if( key === "project.dictionary.id" && value > 0 ) {
-    config.UI.set( uiOptions ).then( function( settings ) {
-      var pid = settings.project.id;
-      var dictContext = settings.project.dictionary.context;
+    config.UI.get( "projects" ).then( projects => {
+      var pid = globalSettings.project.id;
+      var dict = globalSettings.project.dictionary;
 
-      changedDictionary( pid, dictContext ).then( function( newSettings ) {
-        changedSettings( req, res, newSettings );
+      // loadUsers( pid, dict.context ).then( users => {
+      //   _.extend( globalSettings, { projects: projects } );
+      //   globalSettings.project.users = users;
+
+      //   changedSettings( req, res, globalSettings );
+      // } );
+
+      loadDictYears( pid, dict, currentView ).then( years => {
+        _.extend( globalSettings, { projects: projects } );
+        globalSettings.project.years = years;
+
+        changedSettings( req, res, globalSettings );
       } );
     } );
+
   } else {
-    config.UI.set( uiOptions ).then( function( settings ) {
-      changedSettings( req, res, settings );
+
+    config.UI.get( "projects" ).then( projects => {
+      _.extend( globalSettings, { projects: projects } );
+
+      changedSettings( req, res, globalSettings );
     } );
+
   }
 });
 
-function changedSettings( req, res, settings ) {
+function changedSettings( req, res, globalSettings ) {
+  console.log( "changedSettings================================" );
+  console.log( globalSettings );
+
   var pathname = req.body.pathname;
   if( pathname === "/" ) pathname = "index";
 
-  res.status( 200 ).send( { success: true } );
+  var html = Util.getPartialByName( "global_settings", globalSettings );
+
+  res.status( 200 ).send( { success: true, partial: html, globalSettings: globalSettings } );
 }
 
 function changedProject( pid ) {
   return new Promise( function( resolve, reject ) {
     loadDictionaries( pid ).then( function( dicts ) {
-      config.UI.set( { "project.dictionaries": dicts } ).then( function( settings ) {
-        resolve( settings );
-      } );
+      config.UI.set( { "project.dictionaries": dicts } ).then( resolve );
     } );
   } );
 }
@@ -95,11 +138,50 @@ function loadDependencies( pid ) {
   } );
 }
 
+function loadProjectYears( pid ) {
+  var yearPromise = new Promise( function( resolve, reject ) {
+    db.all( queries.SELECT_COMMIT_YEARS_BY_PROJECT, [ pid ], (err, years) => {
+      if( err ) {
+        console.log( err );
+        reject( err );
+      }
+
+      resolve( years );
+    } );
+  } );
+
+  return yearPromise;
+}
+
+function loadDictYears( pid, dict, currentView ) {
+  var query = "";
+
+  if( dict.context == "bug" ) {
+    query = queries.SELECT_BUG_YEARS_BY_PROJECT_AND_DICT;
+  } else if( dict.context == "src" ) {
+    query = queries.SELECT_COMMIT_YEARS_BY_PROJECT_AND_DICT;
+  }
+
+  var yearPromise = new Promise( function( resolve, reject ) {
+    db.all( query, [ pid, dict.id ], (err, years) => {
+      if( err ) {
+        console.log( err );
+        reject( err );
+      }
+
+      resolve( years );
+    } );
+  } );
+
+  return yearPromise;
+}
+
 function loadDictionaries( pid ) {
   var dictsPromise = new Promise( function( resolve, reject ) {
     db.all( queries.SELECT_DICTIONARIES, [ pid ], function( err, dicts ) {
       if( err ) {
         console.log( err );
+        reject( err );
       }
 
       resolve( dicts );
@@ -116,6 +198,7 @@ function loadUsers( pid, dictContext ) {
     db.all( queries.SELECT_ALL_IDENTITIES, [ pid, dictContext ], function( err, users ) {
       if( err ) {
         console.log( err );
+        reject( err );
       }
 
       resolve( users );

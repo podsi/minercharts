@@ -1,0 +1,65 @@
+<div class="panel-group" id="settings-accordion" role="tablist" aria-multiselectable="true">
+  <div class="panel panel-default">
+    <div class="panel-heading" role="tab" id="headingGlobal">
+      <h3 class="panel-title">
+        <a role="button" data-toggle="collapse" data-parent="#settings-accordion" href="#global-settings" aria-expanded="true" aria-controls="global-settings">
+          Global Settings
+        </a>
+      </h3>
+    </div>
+    <div id="global-settings" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="headingGlobal">
+      <div class="panel-body">
+        <form>
+          <div class="form-group form-group-sm">
+            <label for="projects" class="">Project</label>
+            <select id="projects" class="form-control">
+                <option value="-1">Choose project</option>
+              {{#each projects}}
+                <option value="{{id}}">{{product}}</option>
+              {{/each}}
+            </select>
+          </div>
+
+          <div class="form-group form-group-sm" {{#unless project.dictionaries}} style="visibility:hidden;" {{/unless}}>
+            <label for="dictionaries" class="">Dictionary</label>
+            <select id="dictionaries" class="form-control">
+                <option value="-1">All</option>
+              {{#each project.dictionaries}}
+                <option value="{{id}}" dict-context={{context}}>{{name}} ({{context}})</option>
+              {{/each}}
+            </select>
+          </div>
+
+          {{!-- <div class="form-group form-group-sm" {{#unless project.users}} style="visibility:hidden;" {{/unless  }}>
+            <label for="users" class="">User</label>
+            <select id="users" class="form-control">
+                <option value="-1">Choose user</option>
+              {{#each project.users}}
+                <option value="{{iid}}">{{iname}} ({{icontext}})</option>
+              {{/each}}
+            </select>
+          </div> --}}
+
+          <div class="global-settings-years form-group form-group-sm" {{#unless project.years}} style="visibility:hidden;" {{/unless}}>
+            <label for="years" class="">Year</label>
+            <select id="years" class="form-control">
+                <option value="all">All</option>
+              {{#each project.years}}
+                <option value="{{year}}">{{year}}</option>
+              {{/each}}
+            </select>
+          </div>
+
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script type="text/javascript">
+
+$(function( ) {
+  MC.Settings.load( );
+} );
+
+</script>

@@ -1,0 +1,68 @@
+<!-- Nav tabs -->
+<ul id="productmetrics-tabs" class="nav nav-tabs" role="tablist">
+  <li role="presentation" class="{{comuser}}">
+    <a href="/productmetrics/commit_user" aria-controls="comuser" role="tab">Commits per user</a>
+  </li>
+  <li role="presentation" class="{{commodule}}">
+    <a href="/productmetrics/commit_module" aria-controls="commodule" role="tab">Commits per module</a>
+  </li>
+  <li role="presentation" class="{{comsentiment}}">
+    <a href="/productmetrics/commit_sentiment" aria-controls="comsentiment" role="tab">Commits per sentiment</a>
+  </li>
+  <li role="presentation" class="{{comloc}}">
+    <a href="/productmetrics/commit_loc" aria-controls="comloc" role="tab">LOC per commit</a>
+  </li>
+</ul>
+
+<!-- Tab panes -->
+<div class="tab-content">
+  {{!-- commits per user --}}
+  <div role="tabpanel" class="tab-pane {{comuser}}" id="comuser">
+
+    <div class="row">
+      <br>
+
+      <div class="col-md-12">
+        <div class="panel panel-default">
+          <div class="panel-heading">
+            <h3 class="panel-title"></h3>
+            <br>
+
+            <div class="row" id="comuser_users"></div>
+
+            {{!-- switch chart type control --}}
+{{!--             <label class="radio-inline">
+              <input type="radio" name="charttype" id="charttypetrend" value="trend"> trend-chart
+            </label>
+            <label class="radio-inline">
+              <input type="radio" name="charttype" id="charttypebox" value="box"> box-plot
+            </label>
+ --}}
+          </div> {{!-- panel-heading --}}
+
+          <div class="panel-body">
+            <div id="comuser-chart">
+              {{!-- here goes the chart --}}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  {{!-- commits per module --}}
+  <div role="tabpanel" class="tab-pane {{commodule}}" id="commodule">
+  commits per module
+  </div>
+
+  {{!-- commits per sentiment --}}
+  <div role="tabpanel" class="tab-pane {{comsentiment}}" id="comsentiment">
+  commits per sentiment
+  </div>
+
+  {{!-- Lines Of Code per commit --}}
+  <div role="tabpanel" class="tab-pane {{comloc}}" id="comloc">
+  LOC per commit
+  </div>
+</div>

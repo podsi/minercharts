@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html>
   <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
     <title>{{title}}</title>
     <script type='text/javascript' src='/vendor/javascripts/jquery-1.11.3.min.js'></script>
     <script type="text/javascript" src='/vendor/javascripts/highcharts/highcharts.js'></script>
@@ -19,7 +21,7 @@
   </head>
   <body>
     <nav class="navbar navbar-inverse navbar-fixed-top">
-      <div class="container">
+      <div class="container-fluid">
         <div class="navbar-header">
           <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".sidebar-navbar-collapse">
             <span class="sr-only">Toggle navigation</span>
@@ -27,58 +29,50 @@
             <span class="icon-bar"></span>
             <span class="icon-bar"></span>
           </button>
-          <span class="navbar-brand"><a href="/">Minercharts</a></span>
+          <span class="navbar-brand"><a href="/">SubCat</a></span>
         </div>
         <div class="navbar-collapse collapse sidebar-navbar-collapse">
           <ul id="mc-main-nav" class="nav navbar-nav">
-            <li class="{{ovactive}}"><a href="/">Overview</a></li>
-            <li class="{{smactive}}"><a href="/sentiments">Sentiments</a></li>
-            <li class="{{procmactive}}"><a href="/processmetrics">Process metrics</a></li>
-            <li class="{{prodmactive}}"><a href="/productmetrics">Product metrics</a></li>
-            <li class="{{upactive}}"><a href="/userprofiles">User Profile</a></li>
+            <li class="{{ovactive}}"><a class="nav-link" nav-tab="overview" href="/">Overview</a></li>
+            <li class="{{smactive}}"><a class="nav-link" nav-tab="sentiments" href="/sentiments">Sentiments</a></li>
+            <li class="{{procmactive}}"><a class="nav-link" nav-tab="processmetrics" href="/processmetrics">Process metrics</a></li>
+            <li class="{{prodmactive}}"><a class="nav-link" nav-tab="productmetrics" href="/productmetrics">Product metrics</a></li>
+            <li class="{{upactive}}"><a class="nav-link" nav-tab="userprofiles" href="/userprofiles">User Profile</a></li>
           </ul>
         </div><!--/.nav-collapse -->
       </div>
     </nav>
 
-    <div class="page-header">
-      <h3>{{title}} <small>Minercharts powered by SubCats</small></h3>
-    </div>
-
-    <div class="row" style="padding-top: 20px !important;">
-      {{> settings}}
-
-    {{!-- <div class="row">
-      <div class="col-sm-2">
-        <div class="sidebar-nav">
-          <div class="navbar navbar-default" role="navigation">
-            <div class="navbar-header">
-              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".sidebar-navbar-collapse">
-                <span class="sr-only">Toggle navigation</span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-              </button>
-              <span class="visible-xs navbar-brand">{{title}}</span>
-            </div>
-            <div class="navbar-collapse collapse sidebar-navbar-collapse">
-              <ul class="nav navbar-nav">
-                <li class="active"><a href="/">Overview</a></li>
-                <li><a href="/sentiments">Sentiments</a></li>
-                <li><a href="/processmetrics">Prozessmetriken</a></li>
-                <li><a href="/productmetrics">Produktmetriken</a></li>
-                <li><a href="userprofiles">User Profile</a></li>
-              </ul>
-            </div><!--/.nav-collapse -->
-          </div>
-        </div>
+    <div class="container-fluid" style="margin-top: 20px !important;">
+      <div class="row">
+        <div id="message"></div>
+      </div>
+      {{!-- <div class="page-header">
+        <h3>{{title}} <small>Minercharts powered by SubCats</small></h3>
       </div> --}}
 
-      <div class="col-md-9">
-        {{{body}}}
+      <div class="row">
+        <div class="col-md-2 col-sm-3">
+          <div class="row">
+            <div id="globalSettings-panel">
+            {{> global_settings}}
+            </div>
+
+            {{!-- <div class="panel panel-default">
+              <div class="panel-heading">
+                <h3 class="panel-title">Settings</h3>
+              </div>
+            </div> --}}
+
+          </div>
+        </div>
+
+        <div class="col-md-10 col-sm-9">
+          {{{body}}}
+        </div>
+
       </div>
     </div>
-
 
     <script type="text/javascript">
 

@@ -4,6 +4,8 @@ var favicon = require('serve-favicon');
 var logger = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
+var session = require('express-session');
+var crypto = require('crypto');
 
 // load the modern build
 var _ = require('lodash');
@@ -21,6 +23,11 @@ var app = express();
 
 // configuration
 nconf.env().argv();
+
+// create secret hash for session
+var current_date = (new Date()).valueOf().toString();
+var random = Math.random().toString();
+var sesSecret = crypto.createHash('sha1').update(current_date + random).digest('hex');
 
 //
 // Values in `settings.json`
@@ -40,6 +47,7 @@ app.use(logger('dev'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
+app.use(session( { resave: true, saveUninitialized: true, secret: sesSecret, cookie: { maxAge: 60000 } } ) );
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/vendor', express.static(path.join(__dirname, '/vendor')));
 app.use('/node_modules', express.static(path.join(__dirname, '/node_modules')));

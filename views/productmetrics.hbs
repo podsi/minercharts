@@ -1,2 +1,12 @@
-<h1>{{title}}</h1>
-<p>{{subtitle}}</p>
+<script type="text/javascript" src="/javascripts/modules/productmetrics.js"></script>
+<script type="text/javascript">
+$(function( ) {
+  MC.Productmetrics.init( );
+});
+</script>
+
+<div id="productmetrics-panel">
+  {{> productmetrics_tabs}}
+</div>
+
+

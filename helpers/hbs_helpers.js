@@ -10,6 +10,30 @@ var register = function(Handlebars) {
       }
 
       return '';
+    },
+
+    if_eq: function( a, b, opts ) {
+      if (a == b) {
+        return opts.fn(this);
+      } else {
+        return opts.inverse(this);
+      }
+    },
+
+    currentView: function( ) {
+      return MC.Settings.read( "currentView" );
+    },
+
+    debug: function(optionalValue) {
+      console.log("Current Context");
+      console.log("====================");
+      console.log(this);
+
+      if (optionalValue) {
+        console.log("Value");
+        console.log("====================");
+        console.log(optionalValue);
+      }
     }
   };
 

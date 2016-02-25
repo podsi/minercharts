@@ -1,0 +1,13 @@
+<form class="form-horizontal">
+  <div class="form-group form-group-sm">
+    <label for="years" class="col-sm-1 control-label">Year</label>
+    <div class="col-sm-2">
+      <select id="years" class="form-control">
+          <option value="all">All</option>
+        {{#each years}}
+          <option value="{{this}}">{{this}}</option>
+        {{/each}}
+      </select>
+    </div>
+  </div>
+</form>
