@@ -1,13 +1,9 @@
-<form class="form-horizontal">
-  <div class="form-group form-group-sm">
-    <label for="users" class="col-sm-1 control-label">User</label>
-    <div class="col-sm-4">
-      <select id="users" class="form-control">
-          <option value="-1">All ({{users.length}})</option>
-        {{#each users}}
-          <option value="{{iid}}">{{iname}} ({{icontext}})</option>
-        {{/each}}
-      </select>
-    </div>
-  </div>
-</form>
+<label for="users" class="col-sm-2 control-label">User</label>
+<div class="col-sm-4">
+  <select name="users" class="form-control">
+      <option value="-1">All ({{users.length}})</option>
+    {{#each users}}
+      <option value="{{iid}}">{{iname}} ({{icontext}})</option>
+    {{/each}}
+  </select>
+</div>

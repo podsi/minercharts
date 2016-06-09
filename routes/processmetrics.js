@@ -29,7 +29,7 @@ router.post( '/load', function( req, res, next ) {
   if( project && project.dictionary &&
     project.dictionary.context !== "bug" && project.dictionary.context !== "all" ) {
 
-    data.message = "No data for current dictionary! Use a bug dictionary or all!";
+    data.message = "No data for current dictionary! Use a 'bug' dictionary!";
 
     uiSettings.partials.pmBody = Util.getPartialByName( "info", data );
 
@@ -51,8 +51,6 @@ router.post( '/load', function( req, res, next ) {
       if( users && users.length > 0 ) {
         uiSettings.partials.users = Util.getPartialByName( "users", { users: users } );
       }
-
-      console.log( "uuuuuuuuuuuuuuuserssss", users );
 
       uiSettings.partials.pmBody = pmBody;
 
@@ -83,12 +81,7 @@ function getUsers( project, currentView ) {
     var query = "";
     var params = [ ];
 
-    console.log( "0000000000000000000000000000000000000000" );
-    console.log( "project", project );
-    console.log( "currentView", currentView );
-
     if( currentView.nav == "processmetrics" && currentView.tab ) {
-      console.log( "11111111111111111111111111111111111" );
       var userQuery = getUserQuery( project, currentView.tab );
 
       query = userQuery.query || "";
@@ -121,6 +114,8 @@ function getUserQuery( project, tab ) {
 
   switch( tab ) {
     case "bcatsauthor":
+    case "bstatuser":
+    case "bugsuser":
       if( project.dictionary && project.dictionary.context != "all" ) {
         if( project.year && project.year != "all" ) {
           defaults.query += " AND cat.dictionary = ? "
@@ -140,11 +135,56 @@ function getUserQuery( project, tab ) {
           // default query & params
         }
       }
-      defaults.query += " ORDER BY username";
+      break;
+
+    case "commentsuser":
+      if( project.dictionary && project.dictionary.context != "all" ) {
+        if( project.year && project.year != "all" ) {
+          defaults.query += " AND cat.dictionary = ? "
+            + " AND CAST(strftime('%Y', Comments.creation) AS INTEGER) = ? ";
+          defaults.params.push( project.dictionary.id );
+          defaults.params.push( project.year );
+
+        } else {
+          defaults.query += " AND cat.dictionary = ? ";
+          defaults.params.push( project.dictionary.id );
+        }
+      } else {
+        if( project.year && project.year != "all" ) {
+          defaults.query += " AND CAST(strftime('%Y', Comments.creation) AS INTEGER) = ? ";
+          defaults.params.push( project.year );
+        } else {
+          // default query & params
+        }
+      }
+      break;
+
+    case "patchesuser":
+      if( project.dictionary && project.dictionary.context != "all" ) {
+        if( project.year && project.year != "all" ) {
+          defaults.query += " AND cat.dictionary = ? "
+            + " AND CAST(strftime('%Y', attDet.attCreationTime) AS INTEGER) = ? ";
+          defaults.params.push( project.dictionary.id );
+          defaults.params.push( project.year );
+
+        } else {
+          defaults.query += " AND cat.dictionary = ? ";
+          defaults.params.push( project.dictionary.id );
+        }
+      } else {
+        if( project.year && project.year != "all" ) {
+          defaults.query += " AND CAST(strftime('%Y', attDet.attCreationTime) AS INTEGER) = ? ";
+          defaults.params.push( project.year );
+        } else {
+          // default query & params
+        }
+      }
       break;
 
     default: defaults;
   }
+
+  defaults.query += " ORDER BY username";
 
   return { query: defaults.query, params: defaults.params };
 };
@@ -152,7 +192,7 @@ function getUserQuery( project, tab ) {
 function getUserQueryDefaults( project, tab ) {
   var defaults = { query: "", params: [ ] };
 
-  if( tab === "bcatsauthor" ) {
+  if( tab === "bcatsauthor" || tab === "bstatuser" || tab === "bugsuser" ) {
     defaults.query = "SELECT DISTINCT u.name as username, "
       + " u.id as uid, "
       + " i.id as iid, "
@@ -168,20 +208,46 @@ function getUserQueryDefaults( project, tab ) {
       + " AND comp.project = ? ";
     defaults.params = [ project.id ];
   }
-  else if( tab === "bstatuser" ) {
-    // TODO
-  }
   else if( tab === "commentsuser" ) {
-    // TODO
+    defaults.query = "SELECT DISTINCT u.name as username, "
+      + " u.id as uid, "
+      + " i.id as iid, "
+      + " i.name as iname, "
+      + " i.context as icontext "
+      + "FROM "
+      + " Users u, Identities i, Bugs b, BugCategories bc, Categories cat, Components comp, Comments "
+      + "WHERE u.id = i.user "
+      + " AND b.id = bc.bug "
+      + " AND b.id = Comments.bug "
+      + " AND bc.category = cat.id "
+      + " AND b.identity = i.id "
+      + " AND comp.id = b.component "
+      + " AND comp.project = ? ";
+    defaults.params = [ project.id ];
   }
   else if( tab === "issuesattribute" ) {
     // TODO
   }
-  else if( tab === "issuesuser" ) {
-    // TODO
-  }
   else if( tab === "patchesuser" ) {
-    // TODO
+    defaults.query = "SELECT DISTINCT u.name as username, "
+      + " u.id as uid, "
+      + " i.id as iid, "
+      + " i.name as iname, "
+      + " i.context as icontext "
+      + "FROM "
+      + " Users u, Identities i, Bugs b, BugCategories bc, Categories cat, Components comp, "
+      + " Comments, Attachments atts, AttachmentDetails attDet "
+      + "WHERE u.id = i.user "
+      + " AND b.id = bc.bug "
+      + " AND b.id = Comments.bug "
+      + " AND Comments.id = atts.comment "
+      + " AND attDet.attachment = atts.id "
+      + " AND attDet.isPatch = 1 "
+      + " AND bc.category = cat.id "
+      + " AND b.identity = i.id "
+      + " AND comp.id = b.component "
+      + " AND comp.project = ? ";
+    defaults.params = [ project.id ];
   }
 
   return defaults;

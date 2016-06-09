@@ -4,7 +4,7 @@ var nconf = require('nconf');
 var config = require('../../config/config');
 var hbs = require('hbs');
 var Util = require('../../helpers/util');
-var BugCategory = require('../../models/processmetrics/BugCategory');
+var Bug = require('../../models/processmetrics/Bug');
 var Promise = require('bluebird');
 
 // load the modern build
@@ -34,7 +34,9 @@ router.post( '/per_author', function( req, res, next ) {
   var uiSettings = req.body.uiSettings;
   var pmSettings = req.body.pmSettings;
 
-  BugCategory.getBugcatsPerAuthor( uiSettings.globalSettings, pmSettings ).then( cats => {
+  var currentSettings = Util.getCurrentSettings( uiSettings.globalSettings, pmSettings );
+
+  Bug.getBugcatsPerAuthor( currentSettings ).then( cats => {
     res.status( 200 ).send(
       {
         success: true,

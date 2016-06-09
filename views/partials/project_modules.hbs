@@ -1,0 +1,9 @@
+<label for="modules" class="col-sm-2 control-label">Module</label>
+<div class="col-sm-4">
+  <select name="modules" class="form-control">
+      <option value="-1">All ({{modules.length}})</option>
+    {{#each modules}}
+      <option value="{{id}}">{{name}}</option>
+    {{/each}}
+  </select>
+</div>

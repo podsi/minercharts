@@ -48,6 +48,12 @@ window.MC.Charts = (function($, _) {
   };
 
   var dateLineChart = function( opts ) {
+    opts.series.dataLabels = {
+      enabled: true,
+      crop: false
+      // allowOverlap: true
+    };
+
     $( opts.container ).highcharts({
       chart: {
         type: 'spline',
@@ -65,7 +71,7 @@ window.MC.Charts = (function($, _) {
       xAxis: {
         type: 'datetime',
         dateTimeLabelFormats: {
-          month: '%b'
+          month: '%b \'%y'
         },
         title: {
           text: 'Date'
@@ -94,7 +100,71 @@ window.MC.Charts = (function($, _) {
     });
   };
 
+  var basicBarChart = function( opts ) {
+    opts.series.dataLabels = {
+      enabled: true,
+      crop: false
+    };
+
+    $( opts.container ).highcharts({
+      chart: {
+        type: 'column',
+        zoomType: 'x'
+      },
+      title: {
+        text: opts.title.text
+      },
+      subtitle: {
+        text: opts.subtitle.text || ""
+      },
+      credits: {
+        enabled: false
+      },
+      xAxis: {
+        dateTimeLabelFormats: {
+          month: '%b \'%y'
+        },
+        type: 'datetime',
+        title: {
+          text: 'Date'
+        },
+        crosshair: true,
+        showEmpty: false
+      },
+      yAxis: {
+        title: {
+          text: opts.yAxis.title.text
+        },
+        min: 0
+      },
+      tooltip: {
+        headerFormat: '<b>{series.name}</b><br>',
+        pointFormat: '{point.x:%e. %b %Y}: {point.y:.2f}'
+      },
+
+      plotOptions: {
+        spline: {
+          marker: {
+            enabled: true
+          }
+        },
+        column: {
+          pointWidth: 20,
+          stacking: 'normal'
+        }
+      },
+
+      series: opts.series
+    });
+  };
+
   var module = {
+
+    createBasicBarChart: function( container, opts ) {
+      opts.container = container;
+
+      basicBarChart( opts );
+    },
 
     createPieChart: function( container, opts ) {
       opts.container = container;

@@ -4,7 +4,7 @@ var nconf = require('nconf');
 var config = require('../../config/config');
 var hbs = require('hbs');
 var Util = require('../../helpers/util');
-var Commit = require('../../models/productmetrics/Commit');
+var Bug = require('../../models/processmetrics/Bug');
 var Promise = require('bluebird');
 
 // load the modern build
@@ -15,33 +15,36 @@ var queries = require( '../../db/queries' );
 
 router.get('/', function(req, res, next) {
   var data = {
-    title: 'Product metrics',
-    subtitle: 'Charts for the product metrics',
-    prodmactive: "active",
-    comloc: "active"
+    title: 'User profile',
+    subtitle: 'Charts for user',
+    upactive: "active",
+    bugs: "active"
   };
 
   config.UI.load( ).then( function( uiConf ) {
     _.extend( data, uiConf );
 
-    res.render('productmetrics', data );
+    res.render('userprofiles', data );
   } );
 });
 
-router.post( '/per_user', function( req, res, next ) {
+/*
+  Bugs per user
+ */
+router.post( '/get', function( req, res, next ) {
   // see middleware in routes/index.js
   var uiSettings = req.body.uiSettings;
   var pmSettings = req.body.pmSettings;
 
   var currentSettings = Util.getCurrentSettings( uiSettings.globalSettings, pmSettings );
 
-  Commit.getLocPerCommit( currentSettings ).then( locs => {
+  Bug.getBugcatsPerAuthor( currentSettings, 1 ).then( cats => {
     res.status( 200 ).send(
       {
         success: true,
         partials: uiSettings.partials,
         globalSettings: uiSettings.globalSettings,
-        comloc: locs
+        bugs: cats
       }
     );
 
@@ -53,6 +56,7 @@ router.post( '/per_user', function( req, res, next ) {
       message: html
     } );
   } );
+
 });
 
 module.exports = router;

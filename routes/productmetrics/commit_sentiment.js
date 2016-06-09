@@ -4,6 +4,7 @@ var nconf = require('nconf');
 var config = require('../../config/config');
 var hbs = require('hbs');
 var Util = require('../../helpers/util');
+var Commit = require('../../models/productmetrics/Commit');
 var Promise = require('bluebird');
 
 // load the modern build
@@ -25,6 +26,33 @@ router.get('/', function(req, res, next) {
     _.extend( data, uiConf );
 
     res.render('productmetrics', data );
+  } );
+});
+
+router.post( '/per_commit', function( req, res, next ) {
+  // see middleware in routes/index.js
+  var uiSettings = req.body.uiSettings;
+  var pmSettings = req.body.pmSettings;
+
+  var currentSettings = Util.getCurrentSettings( uiSettings.globalSettings, pmSettings );
+
+  Commit.getSentimentsPerCommit( currentSettings ).then( spc => {
+    res.status( 200 ).send(
+      {
+        success: true,
+        partials: uiSettings.partials,
+        globalSettings: uiSettings.globalSettings,
+        comsentiment: spc
+      }
+    );
+
+  }, reason => {
+    var html = Util.getPartialByName( "info", { message: reason } );
+
+    res.status( 200 ).send( {
+      success: false,
+      message: html
+    } );
   } );
 });
 

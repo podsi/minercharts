@@ -111,7 +111,7 @@ var queries = {
 
   SELECT_ALL_COMMIT_CATEGORIES:
       "SELECT "
-    + " Categories.name as label, COUNT(*) as amount "
+    + " Categories.name as category, COUNT(*) as amount "
     + "FROM "
     + " Commits, CommitCategories, Categories, Dictionary "
     + "WHERE "
@@ -133,7 +133,7 @@ var queries = {
 
   SELECT_COMMIT_CATEGORIES_BY_DICT:
       "SELECT "
-    + " Categories.name as label, COUNT(*) as amount "
+    + " Categories.name as category, COUNT(*) as amount "
     + "FROM "
     + " Commits, CommitCategories, Categories, Dictionary "
     + "WHERE "
@@ -157,7 +157,7 @@ var queries = {
 
   SELECT_BUG_CATEGORIES_BY_PROJECT:
       "SELECT "
-    + " Categories.name as label, COUNT(*) as amount "
+    + " Categories.name as category, COUNT(*) as amount "
     + "FROM "
     + " BugCategories, Categories, Dictionary, Components, Bugs "
     + "WHERE "
@@ -187,7 +187,13 @@ var queries = {
     + " GROUP BY BugCategories.category "
     + " UNION SELECT Bugs.creation, 'uncategorised', (SELECT COUNT(*) FROM Bugs, Components WHERE Bugs.component = Components.id AND Components.project = ?)"
     + " - (SELECT COUNT(*) FROM Bugs, Components, BugCategories WHERE Bugs.component=Components.id AND Components.project = ? AND BugCategories.bug = Bugs.id)"
-    + " FROM Bugs, BugCategories, Categories, Components, Dictionary WHERE Bugs.id = BugCategories.bug AND BugCategories.category=Categories.id AND Categories.dictionary=Dictionary.id AND Components.id = Bugs.component AND Components.project = ? AND Categories.dictionary = ? GROUP BY BugCategories.category",
+    + " FROM Bugs, BugCategories, Categories, Components, Dictionary "
+    + " WHERE Bugs.id = BugCategories.bug AND BugCategories.category=Categories.id "
+    + "  AND Categories.dictionary=Dictionary.id "
+    + "  AND Components.id = Bugs.component "
+    + "  AND Components.project = ? "
+    + "  AND Categories.dictionary = ? "
+    + "  GROUP BY BugCategories.category",
 
   SELECT_BUG_CATEGORIES_BY_PROJECT_AND_DICT_AND_IDENTITY_AND_YEAR:
       "SELECT "
@@ -204,9 +210,23 @@ var queries = {
     + " AND CAST(strftime('%Y', Bugs.creation) AS INTEGER) = ? "           // year
     + " GROUP BY BugCategories.category ",
 
+  // SELECT_BUG_CATEGORIES_BY_PROJECT_AND_DICT_AND_YEAR:
+  //     "SELECT "
+  //   + " Categories.name as category, COUNT(*) as amount, Bugs.creation, CAST(strftime('%m', Bugs.creation) AS INTEGER) as month "
+  //   + "FROM "
+  //   + " Categories, Bugs, BugCategories, Components "
+  //   + "WHERE "
+  //   + " Bugs.id = BugCategories.bug "
+  //   + " AND Components.id = Bugs.component "
+  //   + " AND Components.project = ?   "
+  //   + " AND Categories.id = BugCategories.category "
+  //   + " AND Categories.dictionary = ? "
+  //   + " AND CAST(strftime('%Y', Bugs.creation) AS INTEGER) = ? "           // year
+  //   + " GROUP BY BugCategories.category ",
+
   SELECT_BUG_CATEGORIES_BY_PROJECT_AND_DICT_AND_YEAR:
       "SELECT "
-    + " Categories.name as category, COUNT(*) as amount, Bugs.creation, CAST(strftime('%m', Bugs.creation) AS INTEGER) as month "
+    + " Categories.name as category, COUNT(Bugs.id) as amount, Bugs.creation, CAST(strftime('%m', Bugs.creation) AS INTEGER) as month "
     + "FROM "
     + " Categories, Bugs, BugCategories, Components "
     + "WHERE "
@@ -216,7 +236,7 @@ var queries = {
     + " AND Categories.id = BugCategories.category "
     + " AND Categories.dictionary = ? "
     + " AND CAST(strftime('%Y', Bugs.creation) AS INTEGER) = ? "           // year
-    + " GROUP BY BugCategories.category ",
+    + " GROUP BY strftime('%m', Bugs.creation), Categories.name",
 
   SELECT_BUG_CATEGORIES_BY_PROJECT_AND_DICT_AND_IDENTITY:
       "SELECT "
@@ -234,7 +254,7 @@ var queries = {
 
   SELECT_LINKED_COMMITS:
       "SELECT "
-    + " 'Linked' as label,"
+    + " 'Linked' as category,"
     + " (SELECT COUNT(*) FROM BugfixCommit, Commits WHERE BugfixCommit.commitId=Commits.id AND Commits.project = ?) amount "
     + "UNION "
     + " SELECT 'Unlinked',"
@@ -244,7 +264,7 @@ var queries = {
 
   SELECT_LINKED_BUGS:
       "SELECT "
-    + " 'Linked' as label,"
+    + " 'Linked' as category,"
     + " (SELECT COUNT(*) FROM BugfixCommit, Bugs, Components WHERE BugfixCommit.bug=Bugs.id AND Bugs.component=Components.id AND Components.project = ?) as amount "
     + "UNION "
     + " SELECT 'Unlinked',"
@@ -254,7 +274,7 @@ var queries = {
 
   SELECT_COMMIT_CATEGORIES_BY_PROJECT_AND_DICT:
       "SELECT "
-    + " Categories.name as label, Commits.title, Commits.date as date, CAST(strftime('%m', Commits.date) AS INTEGER) as month, COUNT(Commits.id) as amount "
+    + " Categories.name as category, Commits.title, Commits.date as date, CAST(strftime('%m', Commits.date) AS INTEGER) as month, COUNT(Commits.id) as amount "
     + "FROM "
     + " Commits, CommitCategories, Categories "
     + "WHERE Commits.id = CommitCategories.commitId "
@@ -265,7 +285,7 @@ var queries = {
 
   SELECT_COMMIT_CATEGORIES_BY_PROJECT_AND_DICT_AND_AUTHOR:
       "SELECT "
-    + " Categories.name as label, Commits.title, Commits.date as date, CAST(strftime('%m', Commits.date) AS INTEGER) as month, COUNT(Commits.id) as amount "
+    + " Categories.name as category, Commits.title, Commits.date as date, CAST(strftime('%m', Commits.date) AS INTEGER) as month, COUNT(Commits.id) as amount "
     + "FROM "
     + " Commits, CommitCategories, Categories "
     + "WHERE Commits.id = CommitCategories.commitId "
@@ -273,12 +293,11 @@ var queries = {
     + " AND Commits.author = $author "                                        // author
     + " AND Categories.dictionary = $dict "                                   // dict
     + " AND Commits.project = $project "                                      // project
-    + " AND Commits.author = Identities.id "
     + " GROUP BY strftime('%m', Commits.date), Categories.name",
 
   SELECT_COMMIT_CATEGORIES_BY_PROJECT_AND_DICT_AND_YEAR:
       "SELECT "
-    + " Categories.name as label, Commits.title, Commits.date as date, CAST(strftime('%m', Commits.date) AS INTEGER) as month, COUNT(Commits.id) as amount "
+    + " Categories.name as category, Commits.title, Commits.date as date, CAST(strftime('%m', Commits.date) AS INTEGER) as month, COUNT(Commits.id) as amount "
     + "FROM "
     + " Commits, CommitCategories, Categories "
     + "WHERE Commits.id = CommitCategories.commitId "
@@ -291,7 +310,7 @@ var queries = {
   // Commits per Author
   SELECT_COMMIT_CATEGORIES_BY_PROJECT_AND_DICT_AND_YEAR_AND_AUTHOR:
       "SELECT "
-    + " Categories.name as label, Commits.title, Commits.date as date, CAST(strftime('%m', Commits.date) AS INTEGER) as month, COUNT(Commits.id) as amount "
+    + " Categories.name as category, Commits.title, Commits.date as date, CAST(strftime('%m', Commits.date) AS INTEGER) as month, COUNT(Commits.id) as amount "
     + "FROM "
     + " Commits, CommitCategories, Categories, Identities "
     + "WHERE Commits.id = CommitCategories.commitId "

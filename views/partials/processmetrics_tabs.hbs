@@ -1,19 +1,19 @@
 <!-- Nav tabs -->
 <ul id="processmetrics-tabs" class="nav nav-tabs" role="tablist">
-  <li id="bcatsauthor-tab" role="presentation" class="bug {{bcatsauthor}}">
+  <li id="bcatsauthor-tab" role="presentation" class="{{bcatsauthor}}">
     <a href="/processmetrics/bug_cats" aria-controls="bcatsauthor" role="tab">Bug Categories</a>
   </li>
-  <li id="bstatuser-tab" role="presentation" class="bug {{bstatuser}}">
-    <a href="/processmetrics/status_user" aria-controls="bstatuser" role="tab">Bug Status (open/closed)</a>
+  <li id="bstatuser-tab" role="presentation" class="{{bstatuser}}">
+    <a href="/processmetrics/bug_status" aria-controls="bstatuser" role="tab">Bug Status (open/closed)</a>
   </li>
-  <li role="presentation" class="bug {{commentsuser}}">
+  <li role="presentation" class="{{commentsuser}}">
     <a href="/processmetrics/comments_user" aria-controls="commentsuser" role="tab">Comments per user</a>
   </li>
-  <li role="presentation" class="{{issuesattribute}}">
-    <a href="/processmetrics/issues_attribute" aria-controls="issuesattribute" role="tab">Issues per attribute</a>
+  <li role="presentation" class="{{bugsattribute}}">
+    <a href="/processmetrics/bugs_attribute" aria-controls="bugsattribute" role="tab">Bugs per attribute</a>
   </li>
-  <li role="presentation" class="{{issuesuser}}">
-    <a href="/processmetrics/issues_user" aria-controls="issuesuser" role="tab">Issues per user</a>
+  <li role="presentation" class="{{bugsuser}}">
+    <a href="/processmetrics/bugs_user" aria-controls="bugsuser" role="tab">Bugs per user</a>
   </li>
   <li role="presentation" class="{{patchesuser}}">
     <a href="/processmetrics/patches_user" aria-controls="patchesuser" role="tab">Patches per user</a>
@@ -34,7 +34,9 @@
             <h3 class="panel-title"></h3>
             <br>
 
-            <div class="row" id="bcatsauthor_users"></div>
+            <form class="form-horizontal">
+              <div class="form-group form-group-sm">
+                <div class="row" id="bcatsauthor_users"></div>
 
             {{!-- switch chart type control --}}
 {{!--             <label class="radio-inline">
@@ -44,10 +46,12 @@
               <input type="radio" name="charttype" id="charttypebox" value="box"> box-plot
             </label>
  --}}
+              </div>
+            </form>
           </div> {{!-- panel-heading --}}
 
           <div class="panel-body">
-            <div id="process-chart">
+            <div id="process-bcatsauthor-chart">
               {{!-- here goes the chart --}}
             </div>
           </div>
@@ -60,26 +64,180 @@
 
   {{!-- bug closed/opened per user --}}
   <div role="tabpanel" class="bug tab-pane {{bstatuser}}" id="bstatuser">
-  bug status
+
+    <div class="row">
+      <br>
+
+      <div class="col-md-12">
+        <div class="panel panel-default">
+          <div class="panel-heading">
+            <h3 class="panel-title"></h3>
+            <br>
+
+            <form class="form-horizontal">
+              <div class="form-group form-group-sm">
+
+                {{!-- switch user control --}}
+                <div class="row" id="bstatuser_users"></div>
+
+                {{!-- switch bug status control --}}
+                <div class="row" id="bstatuser_status">
+                  <label for="openclosed" class="col-sm-2 control-label">Status</label>
+                  <div class="col-sm-4">
+                    <label class="radio-inline">
+                      <input type="radio" name="openclosed" id="bugopenclosed" value="both" checked="checked"> both
+                    </label>
+                    <label class="radio-inline">
+                      <input type="radio" name="openclosed" id="bugopen" value="1"> open
+                    </label>
+                    <label class="radio-inline">
+                      <input type="radio" name="openclosed" id="bugclosed" value="0"> closed
+                    </label>
+                  </div>
+                </div>
+
+                {{!-- switch chart type control --}}
+                <div class="row" id="bstatuser_charttype">
+                  <label for="charttype" class="col-sm-2 control-label">Chart-Type</label>
+                  <div class="col-sm-4">
+                    <label class="radio-inline">
+                      <input type="radio" name="chartype" id="charttypetrend" value="trend" checked="checked"> trend
+                    </label>
+                    <label class="radio-inline">
+                      <input type="radio" name="chartype" id="charttypebar" value="column"> bar
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </form>
+
+          </div> {{!-- panel-heading --}}
+
+          <div class="panel-body">
+            <div id="process-bstatuser-chart">
+              {{!-- here goes the chart --}}
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
   </div>
 
   {{!-- comments per user --}}
   <div role="tabpanel" class="bug tab-pane {{commentsuser}}" id="commentsuser">
-  comments per user
+    <div class="row">
+      <br>
+
+      <div class="col-md-12">
+        <div class="panel panel-default">
+          <div class="panel-heading">
+            <h3 class="panel-title"></h3>
+            <br>
+
+            <form class="form-horizontal">
+              <div class="form-group form-group-sm">
+
+                {{!-- switch user control --}}
+                <div class="row" id="commentsuser_users"></div>
+
+                {{!-- switch chart type control --}}
+                <div class="row" id="commentsuser_charttype">
+                  <label for="charttype" class="col-sm-2 control-label">Chart-Type</label>
+                  <div class="col-sm-4">
+                    <label class="radio-inline">
+                      <input type="radio" name="chartype" id="charttypetrend" value="trend" checked="checked"> trend
+                    </label>
+                    <label class="radio-inline">
+                      <input type="radio" name="chartype" id="charttypeboxplot" value="boxplot"> boxplot
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </form>
+
+          </div> {{!-- panel-heading --}}
+
+          <div class="panel-body">
+            <div id="process-commentsuser-chart">
+              {{!-- here goes the chart --}}
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
   </div>
 
   {{!-- issues per attribute --}}
-  <div role="tabpanel" class="tab-pane {{issuesattribute}}" id="issuesattribute">
-  issues per attribute
+  <div role="tabpanel" class="tab-pane {{bugsattribute}}" id="bugsattribute">
+  bugs per attribute
   </div>
 
-  {{!-- issues per user --}}
-  <div role="tabpanel" class="tab-pane {{issuesuser}}" id="issuesuser">
-  issues per user
+  {{!-- bugs per user --}}
+  <div role="tabpanel" class="tab-pane {{bugsuser}}" id="bugssuser">
+    <div class="row">
+      <br>
+
+      <div class="col-md-12">
+        <div class="panel panel-default">
+          <div class="panel-heading">
+            <h3 class="panel-title"></h3>
+            <br>
+
+            <form class="form-horizontal">
+              <div class="form-group form-group-sm">
+
+                {{!-- switch user control --}}
+                <div class="row" id="bugsuser_users"></div>
+
+              </div>
+            </form>
+
+          </div> {{!-- panel-heading --}}
+
+          <div class="panel-body">
+            <div id="process-bugsuser-chart">
+              {{!-- here goes the chart --}}
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
   </div>
 
   {{!-- patches per user --}}
   <div role="tabpanel" class="tab-pane {{patchesuser}}" id="patchesuser">
-  patches per user
+    <div class="row">
+      <br>
+
+      <div class="col-md-12">
+        <div class="panel panel-default">
+          <div class="panel-heading">
+            <h3 class="panel-title"></h3>
+            <br>
+
+            <form class="form-horizontal">
+              <div class="form-group form-group-sm">
+
+                {{!-- switch user control --}}
+                <div class="row" id="patchesuser_users"></div>
+
+              </div>
+            </form>
+
+          </div> {{!-- panel-heading --}}
+
+          <div class="panel-body">
+            <div id="process-patchesuser-chart">
+              {{!-- here goes the chart --}}
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
   </div>
 </div>

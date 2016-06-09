@@ -30,7 +30,7 @@ router.post( '/load', function( req, res, next ) {
   if( project && project.dictionary &&
     project.dictionary.context !== "src" && project.dictionary.context !== "all" ) {
 
-    data.message = "No data for current dictionary! Use a src dictionary or all!";
+    data.message = "No data for current dictionary! Use a 'src' dictionary!";
 
     uiSettings.partials.pmBody = Util.getPartialByName( "info", data );
 
@@ -52,8 +52,6 @@ router.post( '/load', function( req, res, next ) {
       if( users && users.length > 0 ) {
         uiSettings.partials.users = Util.getPartialByName( "users", { users: users } );
       }
-
-      console.log( "uuuuuuuuuuuuuuuserssss", users );
 
       uiSettings.partials.pmBody = pmBody;
 
@@ -84,12 +82,7 @@ function getUsers( project, currentView ) {
     var query = "";
     var params = [ ];
 
-    console.log( "0000000000000000000000000000000000000000" );
-    console.log( "project", project );
-    console.log( "currentView", currentView );
-
     if( currentView.nav == "productmetrics" && currentView.tab ) {
-      console.log( "11111111111111111111111111111111111" );
       var userQuery = getUserQuery( project, currentView.tab );
 
       query = userQuery.query || "";
@@ -122,6 +115,9 @@ function getUserQuery( project, tab ) {
 
   switch( tab ) {
     case "comuser":
+    case "comloc":
+    case "comsentiment":
+    case "commodule":
       if( project.dictionary && project.dictionary.context != "all" ) {
         if( project.year && project.year != "all" ) {
           defaults.query += " AND cat.dictionary = ? "
@@ -153,7 +149,7 @@ function getUserQuery( project, tab ) {
 function getUserQueryDefaults( project, tab ) {
   var defaults = { query: "", params: [ ] };
 
-  if( tab === "comuser" ) {
+  if( tab === "comuser" || tab === "comloc" || "comsentiment" ) {
     defaults.query = "SELECT DISTINCT u.name as username, "
       + " u.id as uid, "
       + " i.id as iid, "
@@ -172,12 +168,9 @@ function getUserQueryDefaults( project, tab ) {
   else if( tab === "commodule" ) {
     // TODO
   }
-  else if( tab === "comsentiment" ) {
-    // TODO
-  }
-  else if( tab === "comloc" ) {
-    // TODO
-  }
+  // else if( tab === "comsentiment" ) {
+  //   // TODO
+  // }
 
   return defaults;
 };

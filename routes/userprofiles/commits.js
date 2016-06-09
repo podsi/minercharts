@@ -13,35 +13,40 @@ var _ = require('lodash');
 var db = require( '../../db/db' );
 var queries = require( '../../db/queries' );
 
+/* GET users listing. */
 router.get('/', function(req, res, next) {
   var data = {
-    title: 'Product metrics',
-    subtitle: 'Charts for the product metrics',
-    prodmactive: "active",
-    comloc: "active"
+    title: 'User profile',
+    subtitle: 'Charts for user',
+    upactive: "active",
+    commits: "active"
   };
 
   config.UI.load( ).then( function( uiConf ) {
     _.extend( data, uiConf );
 
-    res.render('productmetrics', data );
+    res.render('userprofiles', data );
   } );
 });
 
-router.post( '/per_user', function( req, res, next ) {
+/*
+  Commits per user
+ */
+router.post( '/get', function( req, res, next ) {
   // see middleware in routes/index.js
   var uiSettings = req.body.uiSettings;
   var pmSettings = req.body.pmSettings;
 
   var currentSettings = Util.getCurrentSettings( uiSettings.globalSettings, pmSettings );
 
-  Commit.getLocPerCommit( currentSettings ).then( locs => {
+  // 1 = chart type --> pie chart
+  Commit.getCommitsPerUser( currentSettings, 1 ).then( cats => {
     res.status( 200 ).send(
       {
         success: true,
         partials: uiSettings.partials,
         globalSettings: uiSettings.globalSettings,
-        comloc: locs
+        commits: cats
       }
     );
 
@@ -53,6 +58,7 @@ router.post( '/per_user', function( req, res, next ) {
       message: html
     } );
   } );
-});
+
+} );
 
 module.exports = router;

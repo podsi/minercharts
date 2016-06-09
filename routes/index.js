@@ -16,14 +16,17 @@ var queries = require( '../db/queries' );
 
 // require all routes (controllers)
 var userProfiles = require('./userprofiles');
+var upCommits = require('./userprofiles/commits');
+var upBugs = require('./userprofiles/bugs');
+
 var sentiments = require('./sentiments');
 
 var processMetrics = require('./processmetrics');
 var bugCategories = require('./processmetrics/bug_cats');
 var bugStatus = require('./processmetrics/bug_status');
 var commentsUser = require('./processmetrics/comments_user');
-var issuesAttr = require('./processmetrics/issues_attribute');
-var issuesUser = require('./processmetrics/issues_user');
+var bugsAttr = require('./processmetrics/bugs_attribute');
+var bugsUser = require('./processmetrics/bugs_user');
 var patchesUser = require('./processmetrics/patches_user');
 
 var productMetrics = require('./productmetrics');
@@ -68,14 +71,17 @@ router.use( function( req, res, next ) {
 
 // use the required routes
 router.use( '/userprofiles', userProfiles );
+router.use( '/userprofiles/commits', upCommits );
+router.use( '/userprofiles/bugs', upBugs );
+
 router.use( '/sentiments', sentiments );
 
 router.use( '/processmetrics', processMetrics );
 router.use( '/processmetrics/bug_cats', bugCategories );
-router.use( '/processmetrics/status_user', bugStatus );
+router.use( '/processmetrics/bug_status', bugStatus );
 router.use( '/processmetrics/comments_user', commentsUser );
-router.use( '/processmetrics/issues_attribute', issuesAttr );
-router.use( '/processmetrics/issues_user', issuesUser );
+router.use( '/processmetrics/bugs_attribute', bugsAttr );
+router.use( '/processmetrics/bugs_user', bugsUser );
 router.use( '/processmetrics/patches_user', patchesUser );
 
 router.use( '/productmetrics', productMetrics );
@@ -249,7 +255,7 @@ function getBugCats( globalSettings ) {
           resolve( null );
         }
 
-        dictId = globalSettings.project.dictionary.id || "-1";
+        dictId = dict.id || "-1";
         dictId = dictId < 0 ? null : dictId;
       }
     } else {
@@ -261,7 +267,7 @@ function getBugCats( globalSettings ) {
 
     if( dictId ) {
       query = queries.SELECT_BUG_CATEGORIES_BY_PROJECT_AND_DICT;
-      params = [ project, project, dictId, project, project ];
+      params = [ project, project, dictId, project, project, project, dictId ];
     }
 
     db.all( query, params, function( err, cats ) {
@@ -397,14 +403,16 @@ function parseOverviewData( cats ) {
   var totalAmount = 0;
 
   _.forEach( cats, function( cat, i ) {
-    totalAmount += cat.amount;
+    if( cat.amount > 0 ) {
+      totalAmount += cat.amount;
 
-    var c = {
-      name: cat.label + " (" + cat.amount + ")",
-      y: cat.amount
-    };
+      var c = {
+        name: cat.category + " (" + cat.amount + ")",
+        y: cat.amount
+      };
 
-    data.push( c );
+      data.push( c );
+    }
   } );
 
   // calculate the percentage

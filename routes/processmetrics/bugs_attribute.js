@@ -18,7 +18,7 @@ router.get('/', function(req, res, next) {
     title: 'Process metrics',
     subtitle: 'Charts for the process metrics',
     procmactive: "active",
-    issuesattribute: "active"
+    bugsattribute: "active"
   };
 
   console.log( data );

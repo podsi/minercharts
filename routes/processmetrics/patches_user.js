@@ -4,6 +4,7 @@ var nconf = require('nconf');
 var config = require('../../config/config');
 var hbs = require('hbs');
 var Util = require('../../helpers/util');
+var Bug = require('../../models/processmetrics/Bug');
 var Promise = require('bluebird');
 
 // load the modern build
@@ -30,5 +31,31 @@ router.get('/', function(req, res, next) {
   } );
 });
 
+router.post( '/per_user', function( req, res, next ) {
+  // see middleware in routes/index.js
+  var uiSettings = req.body.uiSettings;
+  var pmSettings = req.body.pmSettings;
+
+  var currentSettings = Util.getCurrentSettings( uiSettings.globalSettings, pmSettings );
+
+  Bug.getPatchesPerUser( currentSettings ).then( patches => {
+    res.status( 200 ).send(
+      {
+        success: true,
+        partials: uiSettings.partials,
+        globalSettings: uiSettings.globalSettings,
+        patchesuser: patches
+      }
+    );
+
+  }, reason => {
+    var html = Util.getPartialByName( "info", { message: reason } );
+
+    res.status( 200 ).send( {
+      success: false,
+      message: html
+    } );
+  } );
+});
 
 module.exports = router;

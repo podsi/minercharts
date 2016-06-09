@@ -1,0 +1,83 @@
+<!-- Nav tabs -->
+<ul id="userprofiles-tabs" class="nav nav-tabs" role="tablist">
+  <li role="presentation" class="{{commits}}">
+    <a href="/userprofiles/commits" aria-controls="commits" role="tab">Commits</a>
+  </li>
+  <li role="presentation" class="{{bugs}}">
+    <a href="/userprofiles/bugs" aria-controls="bugs" role="tab">Bugs</a>
+  </li>
+</ul>
+
+<!-- Tab panes -->
+<div class="tab-content">
+  {{!-- commits per user --}}
+  <div role="tabpanel" class="tab-pane {{commits}}" id="commits">
+
+    <div class="row">
+      <br>
+
+      <div class="col-md-12">
+        <div class="panel panel-default">
+          <div class="panel-heading">
+            <h3 class="panel-title"></h3>
+            <br>
+
+            <form class="form-horizontal">
+              <div class="form-group form-group-sm">
+
+                {{!-- switch user control --}}
+                <div class="row" id="commits_users">
+                  {{!-- here goes the users dropdown --}}
+                </div>
+
+              </div>
+            </form>
+          </div> {{!-- panel-heading --}}
+
+          <div class="panel-body">
+            <div id="userprofiles-commits-chart">
+              {{!-- here goes the chart --}}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  {{!-- bugs per user --}}
+  <div role="tabpanel" class="tab-pane {{bugs}}" id="bugs">
+
+    <div class="row">
+      <br>
+
+      <div class="col-md-12">
+        <div class="panel panel-default">
+          <div class="panel-heading">
+            <h3 class="panel-title"></h3>
+            <br>
+
+            <form class="form-horizontal">
+              <div class="form-group form-group-sm">
+
+                {{!-- switch user control --}}
+                <div class="row" id="bugs_users">
+                  {{!-- here goes the users dropdown --}}
+                </div>
+
+              </div>
+            </form>
+          </div> {{!-- panel-heading --}}
+
+          <div class="panel-body">
+            <div id="userprofiles-bugs-chart">
+              {{!-- here goes the chart --}}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+</div>
