@@ -14,6 +14,8 @@ npm install
 ```
 
 * Edit main.json to set some configs (port, path to SubCat sqlite db)
+Root directory for db path is the repo root directory.
+Please DO NOT CHANGE the "defaults" part of the `main.json`
 ```sh
 vim config/main.json
 ```
@@ -28,7 +30,7 @@ vim config/main.json
     "port": 4000
   },
   "db": {
-    "path": "./../VALADOC_24032016_2.db"
+    "path": "./../YOUR_SubCat_DB.db"
   }
 }
 ```
