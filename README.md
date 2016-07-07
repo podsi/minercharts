@@ -14,7 +14,7 @@ npm install
 ```
 
 * Edit main.json to set some configs (port, path to SubCat sqlite db)
-Root directory for db path is the repo root directory.
+Root directory for db path is the repo root directory  .
 Please DO NOT CHANGE the "defaults" part of the `main.json`
 ```sh
 vim config/main.json
