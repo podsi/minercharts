@@ -21,6 +21,7 @@ router.post( '/load', function( req, res, next ) {
   // see middleware in routes/index.js
   var uiSettings = req.body.uiSettings;
   var currentView = req.body.currentView;
+  var userprofiles = req.body.userprofiles;
 
   var project = uiSettings.globalSettings.project;
 
@@ -39,11 +40,19 @@ router.post( '/load', function( req, res, next ) {
 
     data.message = "No data for current dictionary! Use a '" + dictContext + "' dictionary!";
 
-    uiSettings.partials.pmBody = Util.getPartialByName( "info", data );
+    if( currentView.tab ) {
+      data[ currentView.tab ] = "active";
+    }
+
+    pmBody = Util.getPartialByName( "userprofiles_tabs", data );
+
+    // uiSettings.partials.pmBody = Util.getPartialByName( "info", data );
+    uiSettings.partials.pmBody = pmBody;
 
     res.status( 200 ).send(
       {
         success: true,
+        message: data.message,
         partials: uiSettings.partials,
         globalSettings: uiSettings.globalSettings
       }
@@ -55,34 +64,38 @@ router.post( '/load', function( req, res, next ) {
 
     pmBody = Util.getPartialByName( "userprofiles_tabs", data );
 
-    getUsers( project, currentView ).then( users => {
-      if( users && users.length > 0 ) {
-        uiSettings.partials.users = Util.getPartialByName( "users", { users: users } );
-      }
+    uiSettings.partials.pmBody = pmBody;
 
-      uiSettings.partials.pmBody = pmBody;
-
-      res.status( 200 ).send(
-        {
-          success: true,
-          partials: uiSettings.partials,
-          globalSettings: uiSettings.globalSettings
-        }
-      );
-
-    }, reason => {
-      var html = Util.getPartialByName( "info", { message: reason } );
-
-      res.status( 200 ).send( {
-        success: false,
-        message: html,
+    res.status( 200 ).send(
+      {
+        success: true,
         partials: uiSettings.partials,
         globalSettings: uiSettings.globalSettings
-      } );
-    } );
+      }
+    );
   }
 
 });
+
+function activateTab( currentTab, context, data ) {
+  if( currentTab ) {
+    if( currentTab === "commits" ) {
+      if( context === "src" ) {
+        data[ "commits" ] = "active";
+      } else {
+        data[ "bugs" ] = "active";
+      }
+    } else if( currentTab === "bugs" ) {
+      if( context === "bug" ) {
+        data[ "bugs" ] = "active";
+      } else {
+        data[ "commits" ] = "active";
+      }
+    }
+  }
+
+  return data;
+}
 
 function getUsers( project, currentView ) {
   var usersPromise = new Promise( (resolve, reject) => {

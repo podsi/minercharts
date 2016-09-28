@@ -1,9 +1,9 @@
 <!-- Nav tabs -->
 <ul id="userprofiles-tabs" class="nav nav-tabs" role="tablist">
-  <li role="presentation" class="{{commits}}">
+  <li role="presentation" name="commits" class="{{commits}}">
     <a href="/userprofiles/commits" aria-controls="commits" role="tab">Commits</a>
   </li>
-  <li role="presentation" class="{{bugs}}">
+  <li role="presentation" name="bugs" class="{{bugs}}">
     <a href="/userprofiles/bugs" aria-controls="bugs" role="tab">Bugs</a>
   </li>
 </ul>
@@ -18,21 +18,22 @@
 
       <div class="col-md-12">
         <div class="panel panel-default">
-          <div class="panel-heading">
-            <h3 class="panel-title"></h3>
-            <br>
+          {{!-- <div class="panel-heading"> --}}
+            {{!-- <h3 class="panel-title"></h3> --}}
+            {{!-- <br> --}}
 
-            <form class="form-horizontal">
-              <div class="form-group form-group-sm">
+            {{!-- <form class="form-horizontal"> --}}
+              {{!-- <div class="form-group form-group-sm"> --}}
 
                 {{!-- switch user control --}}
-                <div class="row" id="commits_users">
+                {{!-- <div class="row" id="commits_users"> --}}
                   {{!-- here goes the users dropdown --}}
-                </div>
+                {{!-- </div> --}}
 
-              </div>
-            </form>
-          </div> {{!-- panel-heading --}}
+              {{!-- </div> --}}
+            {{!-- </form> --}}
+          {{!-- </div>  --}}
+          {{!-- panel-heading end --}}
 
           <div class="panel-body">
             <div id="userprofiles-commits-chart">
@@ -53,21 +54,22 @@
 
       <div class="col-md-12">
         <div class="panel panel-default">
-          <div class="panel-heading">
-            <h3 class="panel-title"></h3>
-            <br>
+          {{!-- <div class="panel-heading"> --}}
+            {{!-- <h3 class="panel-title"></h3> --}}
+            {{!-- <br> --}}
 
-            <form class="form-horizontal">
-              <div class="form-group form-group-sm">
+            {{!-- <form class="form-horizontal"> --}}
+              {{!-- <div class="form-group form-group-sm"> --}}
 
                 {{!-- switch user control --}}
-                <div class="row" id="bugs_users">
+                {{!-- <div class="row" id="bugs_users"> --}}
                   {{!-- here goes the users dropdown --}}
-                </div>
+                {{!-- </div> --}}
 
-              </div>
-            </form>
-          </div> {{!-- panel-heading --}}
+              {{!-- </div> --}}
+            {{!-- </form> --}}
+          {{!-- </div>  --}}
+          {{!-- panel-heading end --}}
 
           <div class="panel-body">
             <div id="userprofiles-bugs-chart">

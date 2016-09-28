@@ -74,6 +74,12 @@ Commit = {
     return { series: data, total: total };
   },
 
+  parseCommitDists( cats, year, attribute ) {
+    switch( attribute ) {
+      case "LOC":
+    }
+  },
+
   parseForPieChart( cats ) {
     var series = { };
     var data = [ ];
@@ -119,10 +125,10 @@ Commit = {
 
     for(var i = 0; i < numberOfBoxes; i++) {
       var data = [ ];
-      var boxValues  = Bug.getBoxValues( data );
+      var boxValues  = Commit.getBoxValues( data );
 
       boxPlotData.boxData.push( boxValues );
-      boxPlotData.meanData.push( Bug.mean( data ) );
+      boxPlotData.meanData.push( Commit.mean( data ) );
     }
 
     return boxPlotData;
@@ -132,9 +138,9 @@ Commit = {
     var boxValues = { };
 
     boxValues.low = Math.min.apply( Math, data );
-    boxValues.q1 = Bug.getPercentile( data, 25 );
-    boxValues.median = Bug.getPercentile( data, 50 );
-    boxValues.q3 = Bug.getPercentile( data, 75 );
+    boxValues.q1 = Commit.getPercentile( data, 25 );
+    boxValues.median = Commit.getPercentile( data, 50 );
+    boxValues.q3 = Commit.getPercentile( data, 75 );
     boxValues.high = Math.max.apply( Math, data );
 
     return boxValues;
@@ -278,14 +284,17 @@ Commit = {
           reject( "Please select a user!" );
         } else {
           select = "SELECT "
-            + " Categories.name as category, Commits.title, Commits.date as date, "
-            + " CAST(strftime('%m', Commits.date) AS INTEGER) as month ";
+            + " Categories.name as category, Commits.title, Commits.date as date, Files.name as filename, "
+            + " CAST(strftime('%m', Commits.date) AS INTEGER) as month, COUNT(Commits.id) as amount ";
           fromTables = "FROM "
-            + " Commits, CommitCategories, Categories ";
-          conditions = "WHERE Commits.id = CommitCategories.commitId "
-            + " AND CommitCategories.category=Categories.id "
-            + " AND Categories.dictionary = $dict "                                   // dict
-            + " AND Commits.project = $project ";                                      // project
+            + " Files, FileChanges, Commits, CommitCategories, Categories ";
+          conditions = "WHERE "
+            + " Files.id = FileChanges.file "
+            + " AND FileChanges.commitId = Commits.id "
+            + " AND Commits.id = CommitCategories.commitId "
+            + " AND CommitCategories.category = Categories.id "
+            + " AND Files.project = $project "
+            + " AND Categories.dictionary = $dict ";
 
           params = {
             $project: currentSettings.pid,
@@ -311,10 +320,6 @@ Commit = {
             }
           }
 
-          if( currentSettings.pmSettings.module ) {
-
-          }
-
           query += select + fromTables + conditions;
           query += " GROUP BY strftime('%m', Commits.date), Categories.name";
 
@@ -324,20 +329,28 @@ Commit = {
               reject( err );
             }
 
-            if( cats.length > 0 ) {
+            if( cats && cats.length > 0 ) {
+              if( currentSettings.pmSettings.module && currentSettings.pmSettings.module.name &&
+                  currentSettings.pmSettings.module.name != "-1" ) {
+                cats = Commit.filterModuleFiles( cats, currentSettings.pmSettings.module.name );
+
+                console.log( "============AFTER FILTER MODULE FILES================" );
+                console.log( cats );
+              }
+
               var parsedData = Commit.parseCommitCatsData( cats, currentSettings.year );
 
               var chartData = {
                 series: parsedData.series,
                 title: {
-                  text: "LOC per Commit"
+                  text: "Commits per module"
                 },
                 subtitle: {
                   text: currentSettings.year + " total: " + parsedData.total
                 },
                 yAxis: {
                   title: {
-                    text: "LOC"
+                    text: "Commits"
                   }
                 }
               };
@@ -358,6 +371,118 @@ Commit = {
   },
 
   getSentimentsPerCommit( currentSettings ) {
+    var sentimentPerCommitPromise = new Promise( function( resolve, reject ) {
+      var select = "";
+      var fromTables = "";
+      var conditions = "";
+      var query = "";
+      var params = { };
+
+      if( currentSettings && currentSettings.project && currentSettings.project.id ) {
+        if( currentSettings.dict == null ) {
+          reject( "Please select a 'src' dictionary!" );
+        } else if( currentSettings.uid == null ) {
+          reject( "Please select a user!" );
+        } else {
+          var sentiment = currentSettings.pmSettings.sentiment;
+
+          select = "SELECT "
+            // + " strftime('%m', c.date) as month, "
+            + " c.linesAdded, c.linesRemoved, s.sentences, s.wordCount ";
+          fromTables = " FROM "
+            + " Commits c, Categories cat, CommitCategories cc, "
+            + " Sentiment s, CommitSentiment cs ";
+          conditions = " WHERE "
+            + " c.project = $project "
+            + " AND cs.commitId = c.id "
+            + " AND cs.sentimentId = s.id "
+            + " AND cc.commitId = c.id "
+            + " AND cc.category = cat.id "
+            + " AND cat.dictionary = $dict "               // dict
+            + " AND cs.sentimentId = s.id "
+            + " AND c.id = cs.commitId "
+            + " AND (CASE WHEN $category = -1 THEN 1 ELSE cc.category = $category END) "
+            + "   AND (CASE WHEN " + sentiment + " = 200 THEN 1 "
+            + "             WHEN " + sentiment + " = 2 THEN s.positive = MAX (s.positive,s.somewhatPositive,s.neutral,s.somewhatNegative,s.negative) "
+            + "             WHEN " + sentiment + " = 1 THEN s.somewhatPositive = MAX (s.positive,s.somewhatPositive,s.neutral,s.somewhatNegative,s.negative) "
+            + "             WHEN " + sentiment + " = 0 THEN s.neutral = MAX (s.positive,s.somewhatPositive,s.neutral,s.somewhatNegative,s.negative) "
+            + "             WHEN " + sentiment + " = -1 THEN s.somewhatNegative = MAX (s.positive,s.somewhatPositive,s.neutral,s.somewhatNegative,s.negative) "
+            + "             WHEN " + sentiment + " = -2 THEN s.negative = MAX (s.positive,s.somewhatPositive,s.neutral,s.somewhatNegative,s.negative) "
+            + "       END) ";
+
+          params = {
+            $project: currentSettings.pid,
+            $dict: currentSettings.dict,
+            $category: currentSettings.pmSettings.category.id
+          };
+
+          if( currentSettings.year !== "all" ) {
+            if( currentSettings.uid < 0 ) {
+              conditions += " AND CAST(strftime('%Y', c.date) AS INTEGER) = $year ";
+              params[ '$year' ] = currentSettings.year;
+            } else {
+              conditions += " AND c.author = $author "
+                + " AND CAST(strftime('%Y', c.date) AS INTEGER) = $year ";
+              params[ '$author' ] = currentSettings.uid;
+              params[ '$year' ] = currentSettings.year;
+            }
+          } else {
+            if( currentSettings.uid < 0 ) {
+              // default query
+            } else {
+              conditions += " AND c.author = $author ";
+              params[ '$author' ] = currentSettings.uid;
+            }
+          }
+
+          query += select + fromTables + conditions;
+          // query += " GROUP BY strftime('%m', c.date)";
+
+          db.all( query, params, function( err, cats ) {
+            if( err ) {
+              console.log( err );
+              reject( err );
+            }
+
+            console.log( "!!!!!!!!!!!!!commit dists!!!!!!!!!!!!!!!!!" );
+            console.log( cats );
+
+            if( cats.length > 0 ) {
+              // TODO: for sentiments --> collect data for each month (so each record)
+              var attribute = currentSettings.pmSettings.attribute || "LOC";
+              var parsedData = Commit.parseCommitDists( cats, currentSettings.year, attribute );
+
+              var chartData = {
+                // series: parsedData.series,
+                // title: {
+                //   text: "Sentiment per Commit"
+                // },
+                // subtitle: {
+                //   text: currentSettings.year + " total: " + parsedData.total
+                // },
+                // yAxis: {
+                //   title: {
+                //     text: "Sentiments"
+                //   }
+                // }
+              };
+
+              resolve( chartData );
+            } else {
+              reject( "Couldn't find any information with current settings!"
+                + " Try to change the filters (project, dictionary, year)!" );
+            }
+          } ) ;
+        }
+      } else {
+        reject( "Please select a project!" );
+      }
+    } );
+
+    return sentimentPerCommitPromise;
+  },
+
+  getSentimentsPerCommitOld( currentSettings ) {
     var sentimentPerCommitPromise = new Promise( function( resolve, reject ) {
       var select = "";
       var fromTables = "";
@@ -423,7 +548,7 @@ Commit = {
 
             if( cats.length > 0 ) {
               // TODO: for sentiments --> collect data for each month (so each record)
-              var parsedData = Commit.parseCommitCatsData( cats, currentSettings.year, attribute );
+              var parsedData = Commit.parseCommitCatsData( cats, currentSettings.year );//, attribute );
 
               var chartData = {
                 series: parsedData.series,
@@ -551,6 +676,28 @@ Commit = {
     } );
 
     return locPerCommitPromise;
+  },
+
+  filterModuleFiles( cats, moduleName ) {
+    var folderRegex = new RegExp( /^.*\// );
+    var folderMatch = null;
+    var fileName = "";
+    var files = { };
+    var fileCats = [ ];
+
+    _.forEach( cats, (cat, i) => {
+      fileName = cat.filename.replace( moduleName + "/", "" );
+
+      if( fileName !== cat.filename ) {
+        folderMatch = fileName.match( folderRegex );
+
+        if( folderMatch === null ) {
+          fileCats.push( cat );
+        }
+      }
+    } );
+
+    return fileCats;
   }
 
 };

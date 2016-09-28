@@ -21,16 +21,21 @@ window.MC.Productmetrics = (function( $ ) {
       MC.ajax( {
         url: "/productmetrics/load",
         params: {
-          project: project
+          project: project,
+          pmSettings: MC.Settings.read( "productmetrics" )
         },
 
         done: function( data ) {
           $( "#productmetrics-panel" ).html( data.partials.pmBody );
 
           module.renderUsers( data );
+          module.renderModules( data );
+          // module.renderCats( data );
           module.loadViewSettings( );
 
-          module.registerUserChangedEvents( );
+          module.registerUserChangedEvent( );
+          module.registerModuleChangedEvent( );
+          // module.registerCatChangedEvent( );
           module.registerEvents( );
 
           module.loadChart( data );
@@ -42,9 +47,38 @@ window.MC.Productmetrics = (function( $ ) {
       $( "#" + module.currentView.tab + "_users" ).html( data.partials.users );
     },
 
-    registerUserChangedEvents( ) {
+    renderModules( data ) {
+      $( "#" + module.currentView.tab + "_modules" ).html( data.partials.modules );
+    },
+
+    renderCats( data ) {
+      if( module.currentView.tab === "comsentiment" ) {
+        $( "#" + module.currentView.tab + "_categories" ).html( data.partials.cats );
+      }
+    },
+
+    registerUserChangedEvent( ) {
       $( "#" + module.currentView.tab + "_users select[name='users']" ).on( "change", function( evt ) {
         module.setUserData( );
+
+
+        var storagePath = module.currentView.nav + "." + module.currentView.tab;
+        MC.Settings.write( storagePath + ".module.name", "-1" );
+
+        module.render( );
+      } );
+    },
+
+    registerModuleChangedEvent( ) {
+      $( "#" + module.currentView.tab + "_modules select[name='modules']" ).on( "change", function( evt ) {
+        module.setModuleData( );
+        module.loadChart( );
+      } );
+    },
+
+    registerCatChangedEvent( ) {
+      $( "#" + module.currentView.tab + "_categories select[name='categories']" ).on( "change", function( evt ) {
+        module.setCatData( );
         module.loadChart( );
       } );
     },
@@ -55,14 +89,29 @@ window.MC.Productmetrics = (function( $ ) {
         MC.Util.toggleRadio( this.el, $(this).val( ) );
 
         MC.Settings.write( "productmetrics.comloc.loc", $(this).val( ) );
-        module.loadLoc( );
+        module.loadChart( );
       } );
 
-      $( "#comloc_charttype input" ).on( "change", function( ) {
+      // for comsentiment
+      $( "#comsentiment_sentiment input" ).on( "change", function( ) {
         MC.Util.toggleRadio( this.el, $(this).val( ) );
 
-        MC.Settings.write( "productmetrics.comloc.charttype", $(this).val( ) );
-        module.loadLoc( );
+        MC.Settings.write( "productmetrics.comsentiment.sentiment", $(this).val( ) );
+        module.loadChart( );
+      } );
+
+      $( "#comsentiment_attribute input" ).on( "change", function( ) {
+        MC.Util.toggleRadio( this.el, $(this).val( ) );
+
+        MC.Settings.write( "productmetrics.comsentiment.attribute", $(this).val( ) );
+        module.loadChart( );
+      } );
+
+      $( "#" + module.currentView.tab + "_charttype input" ).on( "change", function( ) {
+        MC.Util.toggleRadio( this.el, $(this).val( ) );
+
+        MC.Settings.write( "productmetrics." + module.currentView.tab + ".charttype", $(this).val( ) );
+        module.loadChart( );
       } );
     },
 
@@ -79,6 +128,37 @@ window.MC.Productmetrics = (function( $ ) {
 
       MC.Settings.write( storagePath + ".user.id", user );
       MC.Settings.write( storagePath + ".user.name", uname );
+
+      var chartType = MC.Settings.read( storagePath + ".charttype" );
+      var loc = MC.Settings.read( storagePath + ".loc" );
+
+      if( !chartType ) {
+        MC.Settings.write( storagePath + ".charttype", "trend" );
+      }
+
+      if( !loc ) {
+        MC.Settings.write( storagePath + ".loc", "added" );
+      }
+    },
+
+    setModuleData( ) {
+      var selector = "#" + module.currentView.tab + "_modules select[name='modules']";
+      var moduleFolder = $( selector ).val( );
+
+      var storagePath = module.currentView.nav + "." + module.currentView.tab;
+
+      MC.Settings.write( storagePath + ".module.name", moduleFolder );
+    },
+
+    setCatData( ) {
+      var selector = "#" + module.currentView.tab + "_categories select[name='categories']";
+      var cat = $( selector ).val( );
+      var cname = $( selector ).find(":selected").text( );
+
+      var storagePath = module.currentView.nav + "." + module.currentView.tab;
+
+      MC.Settings.write( storagePath + ".category.id", cat );
+      MC.Settings.write( storagePath + ".category.name", cname );
     },
 
     loadViewSettings( ) {
@@ -89,15 +169,16 @@ window.MC.Productmetrics = (function( $ ) {
       var pmSettings = MC.Settings.read( nav );
       var userSelector = "#" + tab + "_users select[name='users']";
 
-      var chartType = "trend";
       if( pmSettings && pmSettings[ tab ]
-        && pmSettings[ tab ].charttype ) {
-        chartType = pmSettings[ tab ].charttype;
-      }
+        && pmSettings[ tab ].user ) {
+        $( userSelector ).val( pmSettings[ tab ].user.id );
 
-      if( tab === "comloc" ) {
-        MC.Settings.write( storagePath + ".charttype", chartType );
-        MC.Util.toggleRadio( "#" + tab + "_charttype input", chartType );
+        if( tab === "commodule" && pmSettings[ tab ].module ) {
+          var selector = "#" + module.currentView.tab + "_modules select[name='modules']";
+          var m = pmSettings[ tab ].module;
+
+          $( selector ).val( m.name || "-1" );
+        }
       }
 
       module.setUserData( );
@@ -108,7 +189,7 @@ window.MC.Productmetrics = (function( $ ) {
 
       if( tab === "comuser" ) module.loadCommitsPerUser( );
       else if( tab === "comloc" ) module.loadLoc( );
-      else if( tab === "comsentiment" ) module.loadSentimentsPerCommit( );
+      else if( tab === "commodule" ) module.loadCommitsPerModule( );
     },
 
     loadCommitsPerUser( opts ) {
@@ -129,16 +210,16 @@ window.MC.Productmetrics = (function( $ ) {
       } );
     },
 
-    loadSentimentsPerCommit( opts ) {
+    loadCommitsPerModule( opts ) {
       MC.ajax( {
-        url: "/productmetrics/commit_sentiment/per_commit",
+        url: "/productmetrics/commit_module/per_module",
         params: {
           project: MC.Settings.read( "project" ) || { },
           pmSettings: MC.Settings.read( "productmetrics" )
         },
 
         done: function( data ) {
-          MC.Charts.createDateLineChart( "#comsentiment-chart", data.comsentiment );
+          MC.Charts.createDateLineChart( "#commodule-chart", data.commodule );
         },
 
         error: function( data ) {

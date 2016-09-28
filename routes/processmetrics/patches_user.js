@@ -19,6 +19,7 @@ router.get('/', function(req, res, next) {
     title: 'Process metrics',
     subtitle: 'Charts for the process metrics',
     procmactive: "active",
+    globalchooseuser: "hidden",
     patchesuser: "active"
   };
 

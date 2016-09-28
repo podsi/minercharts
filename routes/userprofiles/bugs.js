@@ -18,6 +18,7 @@ router.get('/', function(req, res, next) {
     title: 'User profile',
     subtitle: 'Charts for user',
     upactive: "active",
+    globalchooseuser: "show",
     bugs: "active"
   };
 
@@ -34,9 +35,9 @@ router.get('/', function(req, res, next) {
 router.post( '/get', function( req, res, next ) {
   // see middleware in routes/index.js
   var uiSettings = req.body.uiSettings;
-  var pmSettings = req.body.pmSettings;
+  var upSettings = req.body.upSettings;
 
-  var currentSettings = Util.getCurrentSettings( uiSettings.globalSettings, pmSettings );
+  var currentSettings = Util.getCurrentSettings( uiSettings.globalSettings, upSettings );
 
   Bug.getBugcatsPerAuthor( currentSettings, 1 ).then( cats => {
     res.status( 200 ).send(
@@ -53,6 +54,8 @@ router.post( '/get', function( req, res, next ) {
 
     res.status( 200 ).send( {
       success: false,
+      partials: uiSettings.partials,
+      globalSettings: uiSettings.globalSettings,
       message: html
     } );
   } );

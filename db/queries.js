@@ -9,6 +9,18 @@ var queries = {
     + " Users u, Identities i "
     + "WHERE "
     + " u.id = i.user "
+    + "ORDER BY username",
+
+  SELECT_ALL_IDENTITIES_BY_PROJECT_AND_DICT_CONTEXT:
+      "SELECT DISTINCT u.name as username, "
+    + " u.id as uid, "
+    + " i.id as iid, "
+    + " i.name as iname, "
+    + " i.context as icontext "
+    + "FROM "
+    + " Users u, Identities i "
+    + "WHERE "
+    + " u.id = i.user "
     + "AND "
     + " u.project = ? "
     + "AND "

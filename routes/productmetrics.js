@@ -21,6 +21,9 @@ router.post( '/load', function( req, res, next ) {
   // see middleware in routes/index.js
   var uiSettings = req.body.uiSettings;
   var currentView = req.body.currentView;
+  var pmSettings = req.body.pmSettings;
+
+  var currentSettings = Util.getCurrentSettings( uiSettings.globalSettings, pmSettings );
 
   var project = uiSettings.globalSettings.project;
 
@@ -48,9 +51,32 @@ router.post( '/load', function( req, res, next ) {
 
     pmBody = Util.getPartialByName( "productmetrics_tabs", data );
 
-    getUsers( project, currentView ).then( users => {
+    var usersPromise = getUsers( project, currentView );
+    var modulesPromise = getModules( project, currentView, currentSettings );
+    var catsPromise = getCategories( project, currentView );
+    var users = { };
+    var cats = { };
+    var promises = [ ];
+
+    if( currentView.tab === "commodule" ) {
+      promises = [ usersPromise, modulesPromise ];
+    } else {
+      promises = [ usersPromise ];
+    }
+
+    Promise.all( promises ).then( values => {
+      var users = values[ 0 ];
+
+      if( currentView.tab === "commodule" && values.length > 1 ) {
+        var modules = values[ 1 ];
+      }
+
       if( users && users.length > 0 ) {
         uiSettings.partials.users = Util.getPartialByName( "users", { users: users } );
+      }
+
+      if( modules && modules.length > 0 ) {
+        uiSettings.partials.modules = Util.getPartialByName( "modules", { modules: modules } );
       }
 
       uiSettings.partials.pmBody = pmBody;
@@ -63,7 +89,7 @@ router.post( '/load', function( req, res, next ) {
         }
       );
 
-    }, reason => {
+    } ).catch( reason => {
       var html = Util.getPartialByName( "info", { message: reason } );
 
       res.status( 200 ).send( {
@@ -76,6 +102,147 @@ router.post( '/load', function( req, res, next ) {
   }
 
 });
+
+function getModules( project, currentView, currentSettings ) {
+  var modulesPromise = new Promise( (resolve, reject) => {
+    var modulesQuery = getModulesQuery( project, currentView, currentSettings );
+
+    if( modulesQuery ) {
+      var select = modulesQuery.select || "";
+      var conditions = modulesQuery.conditions || "";
+      var end = modulesQuery.end || "";
+      var params = modulesQuery.params || [ ];
+
+      var query = select + conditions + end;
+
+      if( query.length > 0 && params.length > 0 ) {
+        db.all( query, params, function( err, modules ) {
+          if( err ) {
+            console.log( err );
+            reject( err );
+          }
+
+          if( modules.length > 0 ) {
+            var uniqueModules = filterModuleFolders( modules ) || [ ];
+
+            resolve( uniqueModules );
+          } else {
+            reject( "Couldn't find any modules!" );
+          }
+        } );
+      }
+    }
+  } );
+
+  return modulesPromise;
+};
+
+function getModulesQuery( project, currentView, currentSettings ) {
+  var query = {
+    select: "SELECT "
+      + " Categories.name as category, Commits.title, Files.name "
+      + "FROM "
+      + " Files, FileChanges, Commits, CommitCategories, Categories ",
+    conditions: "WHERE "
+      + " Files.id = FileChanges.file "
+      + " AND FileChanges.commitId = Commits.id "
+      + " AND Commits.id = CommitCategories.commitId "
+      + " AND CommitCategories.category = Categories.id "
+      + " AND Files.project = ? "
+      + " AND Categories.dictionary = ? ",
+    params: [ project.id, project.dictionary.id ]
+  };
+
+  if( currentSettings.uid > 0 ) {
+    query.conditions += " AND Commits.author = ? ";
+    query.params.push( currentSettings.uid );
+  }
+
+  if( currentSettings.year !== "all" ) {
+    query.conditions += " AND CAST(strftime('%Y', Commits.date) AS INTEGER) = ? ";
+    query.params.push( currentSettings.year );
+  }
+
+  query.end = " ORDER BY Files.name ";
+
+  return query;
+};
+
+function filterModuleFolders( modules ) {
+  var folderRegex = new RegExp( /^.*\// );
+  var folderMatch = null;
+  var folderName = "";
+  var folders = { };
+  var uniqueModules = [ ];
+
+  _.forEach( modules, (obj, i) => {
+    folderMatch = obj.name.match( folderRegex );
+
+    if( _.isArray( folderMatch ) && folderMatch.length > 0 ) {
+      folderName = folderMatch[ 0 ];
+
+      if( !folders[ folderName ] ) {
+        obj.name = folderName.slice( 0, -1 );
+        folders[ folderName ] = obj;
+
+        uniqueModules.push( obj );
+      }
+    }
+  } );
+
+  return uniqueModules;
+};
+
+function getCategories( project, currentView ) {
+  var catsPromise = new Promise( (resolve, reject) => {
+    var catsQuery = getCatsQuery( project, currentView );
+
+    if( catsQuery ) {
+      var select = catsQuery.select || "";
+      var conditions = catsQuery.conditions || "";
+      var end = catsQuery.end || "";
+      var params = catsQuery.params || [ ];
+
+      var query = select + conditions + end;
+
+      if( query.length > 0 && params.length > 0 ) {
+        db.all( query, params, function( err, cats ) {
+          if( err ) {
+            console.log( err );
+            reject( err );
+          }
+
+          if( cats.length > 0 ) {
+            resolve( cats );
+          } else {
+            reject( "Couldn't find any categories!" );
+          }
+        } );
+      }
+    }
+  } );
+
+  return catsPromise;
+};
+
+function getCatsQuery( project, currentView ) {
+  var query = {
+    select: "SELECT "
+      + " Categories.id, Categories.name "
+      + "FROM "
+      + " Commits, CommitCategories, Categories, Dictionary ",
+    conditions: "WHERE "
+      + " Commits.id=CommitCategories.commitId "
+      + " AND CommitCategories.category=Categories.id "
+      + " AND Commits.project = ? "
+      + " AND Categories.dictionary = ? ",
+    params: [ project.id, project.dictionary.id ]
+  };
+
+  query.end = " GROUP BY CommitCategories.category ";
+
+  return query;
+};
 
 function getUsers( project, currentView ) {
   var usersPromise = new Promise( (resolve, reject) => {

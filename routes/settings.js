@@ -195,7 +195,7 @@ function loadUsers( pid, dictContext ) {
   dictContext = dictContext || null;
 
   var usersPromise = new Promise( function( resolve, reject ) {
-    db.all( queries.SELECT_ALL_IDENTITIES, [ pid, dictContext ], function( err, users ) {
+    db.all( queries.SELECT_ALL_IDENTITIES_BY_PROJECT_AND_DICT_CONTEXT, [ pid, dictContext ], function( err, users ) {
       if( err ) {
         console.log( err );
         reject( err );

@@ -17,21 +17,27 @@ window.MC.Userprofiles = (function( $ ) {
 
     render( ) {
       var project = MC.Settings.read( "project" ) || { };
+      var userprofiles = MC.Settings.read( "userprofiles" );
 
       MC.ajax( {
         url: "/userprofiles/load",
         params: {
-          project: project
+          project: project,
+          userprofiles: userprofiles
         },
 
         done: function( data ) {
           $( "#userprofiles-panel" ).html( data.partials.pmBody );
 
+          if( data.message ) {
+            $( "#userprofiles-commits-chart" ).html( data.message );
+          }
+
           module.renderUsers( data );
-          module.loadViewSettings( );
+          // module.loadViewSettings( );
 
           module.registerUserChangedEvents( );
-          module.registerEvents( );
+          // module.registerEvents( );
 
           module.loadChart( data );
         }
@@ -39,12 +45,37 @@ window.MC.Userprofiles = (function( $ ) {
     },
 
     renderUsers( data ) {
-      $( "#" + module.currentView.tab + "_users" ).html( data.partials.users );
+      var nav = module.currentView.nav;
+      var tab = module.currentView.tab;
+
+      var userSelector = "#global-settings-user select[name='users']";
+      var upSettings = MC.Settings.read( nav );
+
+      if( upSettings && upSettings[ tab ] && upSettings.user ) {
+        upSettings[ tab ].user = upSettings.user;
+      }
+
+      if( upSettings && upSettings[ tab ]
+        && upSettings[ tab ].user ) {
+        $( userSelector ).val( upSettings[ module.currentView.tab ].user.id );
+      }
+
+      module.setUserData( );
     },
 
     registerUserChangedEvents( ) {
-      $( "#" + module.currentView.tab + "_users select[name='users']" ).on( "change", function( evt ) {
+      $( "#global-settings-user select[name='users']" ).on( "change", function( evt ) {
+        var context = $(this).find(":selected").attr( "dict-context" );
+
         module.setUserData( );
+
+        // activate this line to get a filtered dictionary list,
+        // it gets filtered by the context of the chosen user
+        // e.g. "Max Muster (src)" --> the context here is 'src'
+        // module.filterDicts( context );
+
+        // module.activateTab( context );
+
         module.loadChart( );
       } );
     },
@@ -58,18 +89,55 @@ window.MC.Userprofiles = (function( $ ) {
     },
 
     setUserData( ) {
-      var selector = "#" + module.currentView.tab + "_users select[name='users']";
+      var selector = "#global-settings-user select[name='users']";
       var user = $( selector ).val( );
       var uname = $( selector ).find(":selected").text( );
+      var user_context = $( selector ).find(":selected").attr( "dict-context" );
 
-      var storagePath = module.currentView.nav + "." + module.currentView.tab;
+      var storagePath = module.currentView.nav;
 
       MC.Settings.write( storagePath + ".user.id", user );
       MC.Settings.write( storagePath + ".user.name", uname );
+      MC.Settings.write( storagePath + ".user.context", user_context );
+
+      MC.Settings.write( storagePath + "." + module.currentView.tab + ".user.id", user );
+      MC.Settings.write( storagePath + "." + module.currentView.tab + ".user.name", uname );
     },
 
+    // setUserData( ) {
+    //   var selector = "#" + module.currentView.tab + "_users select[name='users']";
+    //   var user = $( selector ).val( );
+    //   var uname = $( selector ).find(":selected").text( );
+
+    //   var storagePath = module.currentView.nav + "." + module.currentView.tab;
+
+    //   MC.Settings.write( storagePath + ".user.id", user );
+    //   MC.Settings.write( storagePath + ".user.name", uname );
+    // },
+
     loadViewSettings( ) {
-      module.setUserData( );
+
+    },
+
+    // activateTab( context ) {
+    //   debugger;
+    //   if( context === "src" ) {
+    //     module.currentView.tab = "commits";
+    //     MC.Settings.write( "currentView", module.currentView );
+
+    //     $( "#userprofiles-tabs > li[name='commits'] > a" ).trigger( 'click' );
+    //   } else if( context === "bug" ) {
+    //     module.currentView.tab = "bugs";
+    //     MC.Settings.write( "currentView", module.currentView );
+
+    //     $( "#userprofiles-tabs > li[name='bugs'] > a" ).trigger( 'click' );
+    //   }
+    // },
+
+    filterDicts( context ) {
+      var filteredDicts = $( "#dictionaries" ).children( ).not( "option:contains('(" + context + ")')" );
+
+      $( filteredDicts ).hide( );
     },
 
     loadChart( data ) {
@@ -85,7 +153,7 @@ window.MC.Userprofiles = (function( $ ) {
         url: "/userprofiles/commits/get",
         params: {
           project: MC.Settings.read( "project" ) || { },
-          pmSettings: MC.Settings.read( "userprofiles" )
+          upSettings: MC.Settings.read( "userprofiles" )
         },
 
         done: function( data ) {
@@ -93,7 +161,7 @@ window.MC.Userprofiles = (function( $ ) {
         },
 
         error: function( data ) {
-          module.resetView( );
+          // module.resetView( );
         }
       } );
     },
@@ -103,7 +171,7 @@ window.MC.Userprofiles = (function( $ ) {
         url: "/userprofiles/bugs/get",
         params: {
           project: MC.Settings.read( "project" ) || { },
-          pmSettings: MC.Settings.read( "userprofiles" )
+          upSettings: MC.Settings.read( "userprofiles" )
         },
 
         done: function( data ) {

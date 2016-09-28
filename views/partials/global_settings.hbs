@@ -25,7 +25,7 @@
             <select id="dictionaries" class="form-control">
                 <option value="-1">All</option>
               {{#each project.dictionaries}}
-                <option value="{{id}}" dict-context={{context}}>{{name}} ({{context}})</option>
+                <option value="{{id}}" class="{{context}}" dict-context={{context}}>{{name}} ({{context}})</option>
               {{/each}}
             </select>
           </div>

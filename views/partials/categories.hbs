@@ -1,0 +1,9 @@
+<label for="category" class="col-sm-2 control-label">Category</label>
+<div class="col-sm-4">
+  <select name="categories" class="form-control">
+      <option value="-1">total</option>
+    {{#each cats}}
+      <option value="{{id}}">{{name}}</option>
+    {{/each}}
+  </select>
+</div>

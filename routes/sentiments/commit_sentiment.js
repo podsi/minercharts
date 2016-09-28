@@ -4,7 +4,7 @@ var nconf = require('nconf');
 var config = require('../../config/config');
 var hbs = require('hbs');
 var Util = require('../../helpers/util');
-var Commit = require('../../models/productmetrics/Commit');
+var Sentiment = require('../../models/sentiments/Sentiment');
 var Promise = require('bluebird');
 
 // load the modern build
@@ -16,27 +16,28 @@ var queries = require( '../../db/queries' );
 /* GET users listing. */
 router.get('/', function(req, res, next) {
   var data = {
-    title: 'Product metrics',
-    subtitle: 'Charts for the product metrics',
-    prodmactive: "active",
+    title: 'Sentiments',
+    subtitle: 'Charts for the sentiments',
+    smactive: "active",
+    globalchooseuser: "hidden",
     comsentiment: "active"
   };
 
   config.UI.load( ).then( function( uiConf ) {
     _.extend( data, uiConf );
 
-    res.render('productmetrics', data );
+    res.render('sentiments', data );
   } );
 });
 
 router.post( '/per_commit', function( req, res, next ) {
   // see middleware in routes/index.js
   var uiSettings = req.body.uiSettings;
-  var pmSettings = req.body.pmSettings;
+  var smSettings = req.body.smSettings;
 
-  var currentSettings = Util.getCurrentSettings( uiSettings.globalSettings, pmSettings );
+  var currentSettings = Util.getCurrentSettings( uiSettings.globalSettings, smSettings );
 
-  Commit.getSentimentsPerCommit( currentSettings ).then( spc => {
+  Sentiment.getSentimentsPerCommit( currentSettings ).then( spc => {
     res.status( 200 ).send(
       {
         success: true,

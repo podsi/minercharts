@@ -20,6 +20,7 @@ var upCommits = require('./userprofiles/commits');
 var upBugs = require('./userprofiles/bugs');
 
 var sentiments = require('./sentiments');
+var commitsPerSentiment = require('./sentiments/commit_sentiment');
 
 var processMetrics = require('./processmetrics');
 var bugCategories = require('./processmetrics/bug_cats');
@@ -32,9 +33,7 @@ var patchesUser = require('./processmetrics/patches_user');
 var productMetrics = require('./productmetrics');
 var commitsPerUser = require('./productmetrics/commit_user');
 var commitsPerModule = require('./productmetrics/commit_module');
-var commitsPerSentiment = require('./productmetrics/commit_sentiment');
 var locPerCommit = require('./productmetrics/commit_loc');
-
 
 // used as a middleware
 router.use( function( req, res, next ) {
@@ -75,6 +74,7 @@ router.use( '/userprofiles/commits', upCommits );
 router.use( '/userprofiles/bugs', upBugs );
 
 router.use( '/sentiments', sentiments );
+router.use( '/sentiments/commit_sentiment', commitsPerSentiment );
 
 router.use( '/processmetrics', processMetrics );
 router.use( '/processmetrics/bug_cats', bugCategories );
@@ -87,7 +87,6 @@ router.use( '/processmetrics/patches_user', patchesUser );
 router.use( '/productmetrics', productMetrics );
 router.use( '/productmetrics/commit_user', commitsPerUser );
 router.use( '/productmetrics/commit_module', commitsPerModule );
-router.use( '/productmetrics/commit_sentiment', commitsPerSentiment );
 router.use( '/productmetrics/commit_loc', locPerCommit );
 
 router.use( '/settings', require('./settings') );
@@ -103,7 +102,8 @@ router.get('/', function(req, res, next) {
       config.UI.set( { "projects": projects } ).then( function( settings ) {
         var data = {
           title: "Overview",
-          ovactive: "active"
+          ovactive: "active",
+          globalchooseuser: "hidden"
         };
 
         _.extend( data, settings );

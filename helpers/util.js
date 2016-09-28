@@ -3,15 +3,33 @@ var hbs = require('hbs');
 module.exports = {
 
   getCurrentSettings( globalSettings, pmSettings ) {
+    var uid, uname;
+
+    console.log( "=============!!!!!!!pmSettings!!!!!!!!!!!============" );
+    console.log( pmSettings );
+
+    if( !pmSettings || pmSettings[ globalSettings.currentView.tab ] === undefined ) {
+      uid = -1;
+      uname = null;
+      pmSettings = null;
+    } else {
+      uid = pmSettings[ globalSettings.currentView.tab ].user.id;
+      uname = pmSettings[ globalSettings.currentView.tab ].user.name;
+      pmSettings = pmSettings[ globalSettings.currentView.tab ];
+    }
+
     var currentSettings = {
       project: globalSettings.project,
       pid: null,
       dict: null,
-      uid: pmSettings[ globalSettings.currentView.tab ].user.id,
-      uname: pmSettings[ globalSettings.currentView.tab ].user.name,
+      uid: uid,
+      uname: uname,
       year: "all",
-      pmSettings: pmSettings[ globalSettings.currentView.tab ]
+      pmSettings: pmSettings
     };
+
+    console.log( "=============!!!!!!!currentSettings!!!!!!!!!!!============" );
+    console.log( currentSettings );
 
     if( globalSettings.project && globalSettings.project.id ) {
       pid = globalSettings.project.id;

@@ -19,6 +19,7 @@ router.get('/', function(req, res, next) {
     title: 'Product metrics',
     subtitle: 'Charts for the product metrics',
     prodmactive: "active",
+    globalchooseuser: "hidden",
     comuser: "active"
   };
 

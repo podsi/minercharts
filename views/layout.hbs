@@ -54,6 +54,38 @@
 
       <div class="row">
         <div class="col-md-2 col-sm-3">
+
+          {{!-- chosse user --}}
+          <div class="row {{globalchooseuser}}">
+            <div class="panel-group" id="settings-accordion" role="tablist" aria-multiselectable="true">
+              <div class="panel panel-default">
+                <div class="panel-heading" role="tab" id="headingGlobal">
+                  <h3 class="panel-title">
+                    <a role="button" data-toggle="collapse" data-parent="#settings-accordion" href="#global-settings-user" aria-expanded="true" aria-controls="global-settings-user">
+                      User
+                    </a>
+                  </h3>
+                </div>
+                <div id="global-settings-user" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="headingGlobal">
+                  <div class="panel-body">
+                    <form>
+
+                      <div class="form-group form-group-sm">
+                        <select name="users" class="form-control">
+                            <option value="-1">Choose user ({{users.length}})</option>
+                          {{#each users}}
+                            <option value="{{iid}}" dict-context="{{icontext}}">{{iname}} ({{icontext}})</option>
+                          {{/each}}
+                        </select>
+                      </div>
+
+                    </form>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <div class="row">
             <div id="globalSettings-panel">
             {{> global_settings}}

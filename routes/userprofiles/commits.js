@@ -19,14 +19,30 @@ router.get('/', function(req, res, next) {
     title: 'User profile',
     subtitle: 'Charts for user',
     upactive: "active",
+    globalchooseuser: "show",
     commits: "active"
   };
 
-  config.UI.load( ).then( function( uiConf ) {
-    _.extend( data, uiConf );
+  db.serialize( function( ) {
+    db.all( queries.SELECT_ALL_IDENTITIES, [ ], function( err, users ) {
+      if( err ) {
+        console.log( err );
+        console.log( "ERROR" );
+      }
 
-    res.render('userprofiles', data );
+      config.UI.set( { "users": users } ).then( function( settings ) {
+        _.extend( data, settings );
+
+        res.render( 'userprofiles', data );
+      } );
+    } );
   } );
+
+  // config.UI.load( ).then( function( uiConf ) {
+  //   _.extend( data, uiConf );
+
+  //   res.render('userprofiles', data );
+  // } );
 });
 
 /*
@@ -35,9 +51,9 @@ router.get('/', function(req, res, next) {
 router.post( '/get', function( req, res, next ) {
   // see middleware in routes/index.js
   var uiSettings = req.body.uiSettings;
-  var pmSettings = req.body.pmSettings;
+  var upSettings = req.body.upSettings;
 
-  var currentSettings = Util.getCurrentSettings( uiSettings.globalSettings, pmSettings );
+  var currentSettings = Util.getCurrentSettings( uiSettings.globalSettings, upSettings );
 
   // 1 = chart type --> pie chart
   Commit.getCommitsPerUser( currentSettings, 1 ).then( cats => {
