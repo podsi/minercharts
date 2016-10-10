@@ -218,7 +218,7 @@ function getCommitCats( globalSettings ) {
 
       // res.send( { partial: html } );
 
-      var parsedCats = parseOverviewData( cats );
+      var parsedCats = parseForPieChart( cats );
 
       var chartData = {
         series: {
@@ -276,7 +276,7 @@ function getBugCats( globalSettings ) {
         reject( err );
       }
 
-      var parsedCats = parseOverviewData( cats );
+      var parsedCats = parseForPieChart( cats );
 
       var chartData = {
         series: {
@@ -326,7 +326,7 @@ function getLinkedCommits( globalSettings ) {
         reject( err );
       }
 
-      var parsed = parseOverviewData( lc );
+      var parsed = parseForPieChart( lc );
 
       var chartData = {
         series: {
@@ -376,7 +376,7 @@ function getLinkedBugs( globalSettings ) {
         reject( err );
       }
 
-      var parsed = parseOverviewData( lc );
+      var parsed = parseForPieChart( lc );
 
       var chartData = {
         series: {
@@ -418,6 +418,35 @@ function parseOverviewData( cats ) {
   // calculate the percentage
   _.forEach( data, function( cat, i ) {
     cat.y = cat.y / totalAmount;
+  } );
+
+  return { data: data, total: totalAmount };
+};
+
+function parseForPieChart( cats ) {
+  var series = { };
+  var data = [ ];
+  var totalAmount = 0;
+
+  _.forEach( cats, function( cat, i ) {
+    if( cat.amount > 0 ) {
+      if( series[ cat.category ] ) {
+        series[ cat.category ].y += cat.amount;
+      } else {
+        series[ cat.category ] = {
+          y: cat.amount
+        };
+      }
+
+      totalAmount += cat.amount;
+    }
+  } );
+
+  _.forEach( series, (obj,key) => {
+    obj.name = key + " (" + obj.y + ")";
+    obj.y = obj.y / totalAmount;
+
+    data.push( obj );
   } );
 
   return { data: data, total: totalAmount };

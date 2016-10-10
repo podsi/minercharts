@@ -184,12 +184,13 @@ var Bug = {
             }
           } else {
             if( currentSettings.uid < 0 ) {
-              query = queries.SELECT_BUG_CATEGORIES_BY_PROJECT_AND_DICT;
-              params.unshift( currentSettings.pid );
-              params.push( currentSettings.pid );
-              params.push( currentSettings.pid );
-              params.push( currentSettings.pid );
-              params.push( currentSettings.dict );
+              // query = queries.SELECT_BUG_CATEGORIES_BY_PROJECT_AND_DICT;
+              // params.unshift( currentSettings.pid );
+              // params.push( currentSettings.pid );
+              // params.push( currentSettings.pid );
+              // params.push( currentSettings.pid );
+              // params.push( currentSettings.dict );
+              query = queries.SELECT_BUG_CATEGORIES_BY_PROJECT_AND_DICT_2;
             } else {
               query = queries.SELECT_BUG_CATEGORIES_BY_PROJECT_AND_DICT_AND_IDENTITY;
               params.push( currentSettings.uid );

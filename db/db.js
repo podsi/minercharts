@@ -16,6 +16,8 @@ db = new sqlite3.Database(dbFile);
 
 console.log("db initialized");
 
+// db.loadExtension( 'extension-functions.c' );
+
 module.exports = {
   all: function(sql, params, callback) {
     console.log( "========================SQL=========================" );

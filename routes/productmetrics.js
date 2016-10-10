@@ -25,6 +25,9 @@ router.post( '/load', function( req, res, next ) {
 
   var currentSettings = Util.getCurrentSettings( uiSettings.globalSettings, pmSettings );
 
+  console.log( "************************ currentSettings ================" );
+  console.log( currentSettings );
+
   var project = uiSettings.globalSettings.project;
 
   var data = { };
@@ -138,34 +141,38 @@ function getModules( project, currentView, currentSettings ) {
 };
 
 function getModulesQuery( project, currentView, currentSettings ) {
-  var query = {
-    select: "SELECT "
-      + " Categories.name as category, Commits.title, Files.name "
-      + "FROM "
-      + " Files, FileChanges, Commits, CommitCategories, Categories ",
-    conditions: "WHERE "
-      + " Files.id = FileChanges.file "
-      + " AND FileChanges.commitId = Commits.id "
-      + " AND Commits.id = CommitCategories.commitId "
-      + " AND CommitCategories.category = Categories.id "
-      + " AND Files.project = ? "
-      + " AND Categories.dictionary = ? ",
-    params: [ project.id, project.dictionary.id ]
-  };
+  if( project && project.id && project.dictionary && project.dictionary.id ) {
+    var query = {
+      select: "SELECT "
+        + " Categories.name as category, Commits.title, Files.name "
+        + "FROM "
+        + " Files, FileChanges, Commits, CommitCategories, Categories ",
+      conditions: "WHERE "
+        + " Files.id = FileChanges.file "
+        + " AND FileChanges.commitId = Commits.id "
+        + " AND Commits.id = CommitCategories.commitId "
+        + " AND CommitCategories.category = Categories.id "
+        + " AND Files.project = ? "
+        + " AND Categories.dictionary = ? ",
+      params: [ project.id, project.dictionary.id ]
+    };
 
-  if( currentSettings.uid > 0 ) {
-    query.conditions += " AND Commits.author = ? ";
-    query.params.push( currentSettings.uid );
+    if( currentSettings.uid > 0 ) {
+      query.conditions += " AND Commits.author = ? ";
+      query.params.push( currentSettings.uid );
+    }
+
+    if( currentSettings.year !== "all" ) {
+      query.conditions += " AND CAST(strftime('%Y', Commits.date) AS INTEGER) = ? ";
+      query.params.push( currentSettings.year );
+    }
+
+    query.end = " ORDER BY Files.name ";
+
+    return query;
+  } else {
+    return false;
   }
-
-  if( currentSettings.year !== "all" ) {
-    query.conditions += " AND CAST(strftime('%Y', Commits.date) AS INTEGER) = ? ";
-    query.params.push( currentSettings.year );
-  }
-
-  query.end = " ORDER BY Files.name ";
-
-  return query;
 };
 
 function filterModuleFolders( modules ) {
@@ -197,7 +204,9 @@ function getCategories( project, currentView ) {
   var catsPromise = new Promise( (resolve, reject) => {
     var catsQuery = getCatsQuery( project, currentView );
 
-    if( catsQuery ) {
+    if( catsQuery.error ) {
+      reject( catsQuery.msg );
+    } else {
       var select = catsQuery.select || "";
       var conditions = catsQuery.conditions || "";
       var end = catsQuery.end || "";
@@ -226,22 +235,30 @@ function getCategories( project, currentView ) {
 };
 
 function getCatsQuery( project, currentView ) {
-  var query = {
-    select: "SELECT "
-      + " Categories.id, Categories.name "
-      + "FROM "
-      + " Commits, CommitCategories, Categories, Dictionary ",
-    conditions: "WHERE "
-      + " Commits.id=CommitCategories.commitId "
-      + " AND CommitCategories.category=Categories.id "
-      + " AND Commits.project = ? "
-      + " AND Categories.dictionary = ? ",
-    params: [ project.id, project.dictionary.id ]
-  };
+  if( project && project.id ) {
+    if( project.dictionary && project.dictionary.id ) {
+      var query = {
+        select: "SELECT "
+          + " Categories.id, Categories.name "
+          + "FROM "
+          + " Commits, CommitCategories, Categories, Dictionary ",
+        conditions: "WHERE "
+          + " Commits.id=CommitCategories.commitId "
+          + " AND CommitCategories.category=Categories.id "
+          + " AND Commits.project = ? "
+          + " AND Categories.dictionary = ? ",
+        params: [ project.id, project.dictionary.id ]
+      };
 
-  query.end = " GROUP BY CommitCategories.category ";
+      query.end = " GROUP BY CommitCategories.category ";
 
-  return query;
+      return query;
+    } else {
+      return { error: true, msg: "No dictionary found for current project!" };
+    }
+  } else {
+    return { error: true, msg: "No project found!" };
+  }
 };
 
 function getUsers( project, currentView ) {

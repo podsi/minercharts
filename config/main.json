@@ -7,6 +7,6 @@
     "port": 4000
   },
   "db": {
-    "path": "./../VALADOC_24032016_2.db"
+    "path": "./../gnome-shell.db"
   }
 }
