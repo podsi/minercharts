@@ -157,6 +157,11 @@ window.MC.Settings = (function($, _) {
       if( data.globalSettings && data.globalSettings.project && data.globalSettings.project.years ) {
         module.write( "project.years", data.globalSettings.project.years );
       }
+    },
+
+    storeDictionariesOrYears: function( data ) {
+      module.storeDictionaries( data );
+      module.storeYears( data );
     }
 
   };

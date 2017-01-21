@@ -321,7 +321,7 @@ Commit = {
           }
 
           query += select + fromTables + conditions;
-          query += " GROUP BY strftime('%m', Commits.date), Categories.name";
+          query += " GROUP BY strftime('%Y-%m-%d', Commits.date) ";
 
           db.all( query, params, function( err, cats ) {
             if( err ) {
@@ -637,7 +637,7 @@ Commit = {
           }
 
           query += select + fromTables + conditions;
-          query += " GROUP BY strftime('%m', Commits.date), Categories.name";
+          query += " GROUP BY strftime('%Y-%m-%d', Commits.date) ";
 
           db.all( query, params, function( err, cats ) {
             if( err ) {

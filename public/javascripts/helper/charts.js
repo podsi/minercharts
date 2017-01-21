@@ -30,6 +30,9 @@ window.MC.Charts = (function($, _) {
         pointFormat: '{series.name}: <b>{point.percentage:.1f}%</b>'
       },
       plotOptions: {
+        series: {
+          turboThreshold: 100000
+        },
         pie: {
           allowPointSelect: true,
           cursor: 'pointer',
@@ -89,6 +92,9 @@ window.MC.Charts = (function($, _) {
       },
 
       plotOptions: {
+        series: {
+          turboThreshold: 100000
+        },
         spline: {
           marker: {
             enabled: true

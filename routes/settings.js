@@ -22,7 +22,7 @@ router.post('/changed', function(req, res, next) {
   var project = req.body.project;
   var currentView = req.body.currentView;
 
-  console.log( "CHANGED SETTINGS============" );
+  console.log( "============CHANGED SETTINGS============" );
   console.log( req.body.uiSettings.globalSettings );
 
   var globalSettings = {
@@ -43,19 +43,28 @@ router.post('/changed', function(req, res, next) {
     if( value < 0 ) {
       res.status( 200 ).send( { message: "No Project for given id " + value } );
     } else {
+      let promises = [ config.UI.get( "projects" ) ];
+
+      if( currentView.nav === "processmetrics" ) {
+        promises.push( loadProjectYears( value ) );
+      } else {
+        promises.push( loadDictionaries( value ) );
+      }
       // var yearsP = loadProjectYears( value );
-      var projectsP = config.UI.get( "projects" );
-      var dictP = loadDictionaries( value );
 
-      Promise.all( [ projectsP, dictP/*, yearsP*/ ] ).then( values => {
-
+      Promise.all( promises ).then( values => {
         var projects = values[ 0 ];
-        var dicts = values[ 1 ];
-        // var years = values[ 2 ];
+        var prop = "";
 
         _.extend( globalSettings, { projects: projects } );
-        globalSettings.project.dictionaries = dicts;
-        // globalSettings.project.years = years;
+
+        if( currentView.nav === "processmetrics" ) {
+          prop = "years";
+        } else {
+          prop = "dictionaries";
+        }
+
+        globalSettings.project[ prop ] = values[ 1 ];
 
         changedSettings( req, res, globalSettings );
       } );

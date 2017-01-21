@@ -29,7 +29,7 @@ var app = (function($) {
         var pathname = window.location.pathname;
 
         if( parseInt( projectId, 10 ) > 0 ) {
-          MC.Settings.changed( pathname, "project.id", projectId, { }, MC.Settings.storeDictionaries );
+          MC.Settings.changed( pathname, "project.id", projectId, { }, MC.Settings.storeDictionariesOrYears );
         } else {
           MC.storage.removeItem( "project" );
           // document.cookie = "project=;expires=Thu, 01 Jan 1970 00:00:00 UTC";

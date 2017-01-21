@@ -166,12 +166,12 @@ var Bug = {
       var params = [ ];
 
       if( currentSettings && currentSettings.project && currentSettings.project.id ) {
-        if( currentSettings.dict == null ) {
-          reject( "Please select a 'bug' dictionary!" );
-        } else if( currentSettings.uid == null ) {
-          reject( "Please select a user!" );
-        } else {
-          params = [ currentSettings.pid, currentSettings.dict ];
+        // if( currentSettings.dict == null ) {
+        //   reject( "Please select a 'bug' dictionary!" );
+        // } else if( currentSettings.uid == null ) {
+        //   reject( "Please select a user!" );
+        // } else {
+          params = [ currentSettings.pid ];
 
           if( currentSettings.year !== "all" ) {
             if( currentSettings.uid < 0 ) {
@@ -256,8 +256,8 @@ var Bug = {
               reject( "Couldn't find any bugs for user '" + currentSettings.uname
                 + "'. Try to change the filters (project, dictionary, year)!" );
             }
-          } ) ;
-        }
+          } );
+        // }
       } else {
         reject( "Please select a project!" );
       }
@@ -282,17 +282,15 @@ var Bug = {
           reject( "Please select a user!" );
         } else {
           query = "SELECT "
-            + " Categories.name as category, COUNT(Bugs.id) as amount, Bugs.creation, Bugs.isOpen, "
+            + " Severity.name as category, COUNT(Bugs.id) as amount, Bugs.creation, Bugs.isOpen, "
             + " CAST(strftime('%m', Bugs.creation) AS INTEGER) as month "
             + "FROM "
-            + " Categories, Bugs, BugCategories, Components "
+            + " Severity, Bugs, Components "
             + "WHERE "
-            + " Bugs.id = BugCategories.bug "
-            + " AND Components.id = Bugs.component "
+            + " Components.id = Bugs.component "
             + " AND Components.project = ?   "
-            + " AND Categories.id = BugCategories.category "
-            + " AND Categories.dictionary = ? ";
-          params = [ currentSettings.pid, currentSettings.dict ];
+            + " AND Severity.id = Bugs.severity ";
+          params = [ currentSettings.pid ];
 
           if( currentSettings.year !== "all" ) {
             if( currentSettings.uid < 0 ) {
@@ -320,7 +318,7 @@ var Bug = {
             params.push( currentSettings.pmSettings.openclosed );
           }
 
-          query += " GROUP BY strftime('%m', Bugs.creation), Categories.name ";
+          query += " GROUP BY strftime('%Y-%m-%d', Bugs.creation) ";
 
           db.all( query, params, function( err, cats ) {
             if( err ) {
@@ -373,18 +371,16 @@ var Bug = {
           reject( "Please select a user!" );
         } else {
           query = "SELECT "
-            + " Categories.name as category, COUNT(Comments.id) as amount, Comments.creation, "
+            + " Severity.name as category, COUNT(Comments.id) as amount, Comments.creation, "
             + " CAST(strftime('%m', Comments.creation) AS INTEGER) as month "
             + "FROM "
-            + " Categories, Bugs, BugCategories, Components, Comments "
+            + " Severity, Bugs, Components, Comments "
             + "WHERE "
-            + " Bugs.id = BugCategories.bug "
-            + " AND Comments.bug = Bugs.id "
+            + " Comments.bug = Bugs.id "
             + " AND Components.id = Bugs.component "
             + " AND Components.project = ?   "
-            + " AND Categories.id = BugCategories.category "
-            + " AND Categories.dictionary = ? ";
-          params = [ currentSettings.pid, currentSettings.dict ];
+            + " AND Severity.id = Bugs.severity ";
+          params = [ currentSettings.pid ];
 
           if( currentSettings.year !== "all" ) {
             if( currentSettings.uid < 0 ) {
@@ -412,7 +408,7 @@ var Bug = {
             params.push( currentSettings.pmSettings.openclosed );
           }
 
-          query += " GROUP BY strftime('%m', Comments.creation), Categories.name ";
+          query += " GROUP BY strftime('%Y-%m-%d', Comments.creation) ";
 
           db.all( query, params, function( err, cats ) {
             if( err ) {
@@ -468,21 +464,19 @@ var Bug = {
           reject( "Please select a user!" );
         } else {
           query = "SELECT "
-            + " Categories.name as category, COUNT(atts.id) as amount, attDet.attCreationTime as creation, "
+            + " Severity.name as category, COUNT(atts.id) as amount, attDet.attCreationTime as creation, "
             + " CAST(strftime('%m', attDet.attCreationTime) AS INTEGER) as month "
             + "FROM "
-            + " Categories, Bugs, BugCategories, Components, Comments, Attachments atts, AttachmentDetails attDet "
+            + " Severity, Bugs, Components, Comments, Attachments atts, AttachmentDetails attDet "
             + "WHERE "
-            + " Bugs.id = BugCategories.bug "
-            + " AND Comments.bug = Bugs.id "
+            + " Comments.bug = Bugs.id "
             + " AND Comments.id = atts.comment "
             + " AND attDet.attachment = atts.id "
             + " AND attDet.isPatch = 1 "
             + " AND Components.id = Bugs.component "
             + " AND Components.project = ?   "
-            + " AND Categories.id = BugCategories.category "
-            + " AND Categories.dictionary = ? ";
-          params = [ currentSettings.pid, currentSettings.dict ];
+            + " AND Severity.id = Bugs.severity ";
+          params = [ currentSettings.pid ];
 
           if( currentSettings.year !== "all" ) {
             if( currentSettings.uid < 0 ) {
@@ -503,7 +497,7 @@ var Bug = {
             }
           }
 
-          query += " GROUP BY strftime('%m', attDet.attCreationTime), Categories.name ";
+          query += " GROUP BY strftime('%Y-%m-%d', attDet.attCreationTime) ";
 
           db.all( query, params, function( err, cats ) {
             if( err ) {
