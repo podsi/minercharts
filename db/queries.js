@@ -224,7 +224,7 @@ var queries = {
 
   SELECT_BUG_CATEGORIES_BY_PROJECT_AND_DICT_2:
       "SELECT "
-    + " Severity.name as category, COUNT(Bugs.id) as amount, Bugs.creation, CAST(strftime('%m', Bugs.creation) AS INTEGER) as month "
+    + " Severity.name as category, COUNT(DISTINCT(Bugs.id)) as amount, Bugs.creation, CAST(strftime('%m', Bugs.creation) AS INTEGER) as month "
     + "FROM "
     + " Severity, Bugs, Components "
     + "WHERE "
@@ -249,7 +249,7 @@ var queries = {
 
     SELECT_BUG_CATEGORIES_BY_PROJECT_AND_DICT_AND_YEAR:
       "SELECT "
-    + " Severity.name as category, COUNT(Bugs.id) as amount, Bugs.creation, CAST(strftime('%m', Bugs.creation) AS INTEGER) as month "
+    + " Severity.name as category, COUNT(DISTINCT(Bugs.id)) as amount, Bugs.creation, CAST(strftime('%m', Bugs.creation) AS INTEGER) as month "
     + "FROM "
     + " Severity, Bugs, Components "
     + "WHERE "
@@ -296,7 +296,7 @@ var queries = {
 
   SELECT_COMMIT_CATEGORIES_BY_PROJECT_AND_DICT:
       "SELECT "
-    + " Categories.name as category, Commits.title, Commits.date as date, CAST(strftime('%m', Commits.date) AS INTEGER) as month, COUNT(Commits.id) as amount "
+    + " Categories.name as category, Commits.title, Commits.date as date, CAST(strftime('%m', Commits.date) AS INTEGER) as month, COUNT(DISTINCT(Commits.id)) as amount "
     + "FROM "
     + " Commits, CommitCategories, Categories "
     + "WHERE Commits.id = CommitCategories.commitId "
@@ -307,7 +307,7 @@ var queries = {
 
   SELECT_COMMIT_CATEGORIES_BY_PROJECT_AND_DICT_AND_AUTHOR:
       "SELECT "
-    + " Categories.name as category, Commits.title, Commits.date as date, CAST(strftime('%m', Commits.date) AS INTEGER) as month, COUNT(Commits.id) as amount "
+    + " Categories.name as category, Commits.title, Commits.date as date, CAST(strftime('%m', Commits.date) AS INTEGER) as month, COUNT(DISTINCT(Commits.id)) as amount "
     + "FROM "
     + " Commits, CommitCategories, Categories "
     + "WHERE Commits.id = CommitCategories.commitId "
@@ -319,7 +319,7 @@ var queries = {
 
   SELECT_COMMIT_CATEGORIES_BY_PROJECT_AND_DICT_AND_YEAR:
       "SELECT "
-    + " Categories.name as category, Commits.title, Commits.date as date, CAST(strftime('%m', Commits.date) AS INTEGER) as month, COUNT(Commits.id) as amount "
+    + " Categories.name as category, Commits.title, Commits.date as date, CAST(strftime('%m', Commits.date) AS INTEGER) as month, COUNT(DISTINCT(Commits.id)) as amount "
     + "FROM "
     + " Commits, CommitCategories, Categories "
     + "WHERE Commits.id = CommitCategories.commitId "
@@ -332,7 +332,7 @@ var queries = {
   // Commits per Author
   SELECT_COMMIT_CATEGORIES_BY_PROJECT_AND_DICT_AND_YEAR_AND_AUTHOR:
       "SELECT "
-    + " Categories.name as category, Commits.title, Commits.date as date, CAST(strftime('%m', Commits.date) AS INTEGER) as month, COUNT(Commits.id) as amount "
+    + " Categories.name as category, Commits.title, Commits.date as date, CAST(strftime('%m', Commits.date) AS INTEGER) as month, COUNT(DISTINCT(Commits.id)) as amount "
     + "FROM "
     + " Commits, CommitCategories, Categories, Identities "
     + "WHERE Commits.id = CommitCategories.commitId "

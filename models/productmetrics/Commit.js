@@ -499,7 +499,7 @@ Commit = {
           select = "SELECT "
             + " Categories.name as category, Commits.title, Commits.date as date, "
             + " s.sentences, s.wordCount, "
-            + " CAST(strftime('%m', Commits.date) AS INTEGER) as month, COUNT(Commits.id) as amount ";
+            + " CAST(strftime('%m', Commits.date) AS INTEGER) as month, COUNT(DISTINCT(Commits.id)) as amount ";
           fromTables = "FROM "
             + " Commits, CommitCategories, Categories, "
             // + " SentenceSentiment ss, BlockSentiment bs, "

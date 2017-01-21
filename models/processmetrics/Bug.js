@@ -282,7 +282,7 @@ var Bug = {
           reject( "Please select a user!" );
         } else {
           query = "SELECT "
-            + " Severity.name as category, COUNT(Bugs.id) as amount, Bugs.creation, Bugs.isOpen, "
+            + " Severity.name as category, COUNT(DISTINCT(Bugs.id)) as amount, Bugs.creation, Bugs.isOpen, "
             + " CAST(strftime('%m', Bugs.creation) AS INTEGER) as month "
             + "FROM "
             + " Severity, Bugs, Components "
@@ -371,7 +371,7 @@ var Bug = {
           reject( "Please select a user!" );
         } else {
           query = "SELECT "
-            + " Severity.name as category, COUNT(Comments.id) as amount, Comments.creation, "
+            + " Severity.name as category, COUNT(DISTINCT(Comments.id)) as amount, Comments.creation, "
             + " CAST(strftime('%m', Comments.creation) AS INTEGER) as month "
             + "FROM "
             + " Severity, Bugs, Components, Comments "
@@ -464,7 +464,7 @@ var Bug = {
           reject( "Please select a user!" );
         } else {
           query = "SELECT "
-            + " Severity.name as category, COUNT(atts.id) as amount, attDet.attCreationTime as creation, "
+            + " Severity.name as category, COUNT(DISTINCT(atts.id)) as amount, attDet.attCreationTime as creation, "
             + " CAST(strftime('%m', attDet.attCreationTime) AS INTEGER) as month "
             + "FROM "
             + " Severity, Bugs, Components, Comments, Attachments atts, AttachmentDetails attDet "
