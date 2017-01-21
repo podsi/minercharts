@@ -285,7 +285,7 @@ Commit = {
         } else {
           select = "SELECT "
             + " Categories.name as category, Commits.title, Commits.date as date, Files.name as filename, "
-            + " CAST(strftime('%m', Commits.date) AS INTEGER) as month, COUNT(Commits.id) as amount ";
+            + " CAST(strftime('%m', Commits.date) AS INTEGER) as month, COUNT(DISTINCT(Commits.id)) as amount ";
           fromTables = "FROM "
             + " Files, FileChanges, Commits, CommitCategories, Categories ";
           conditions = "WHERE "
