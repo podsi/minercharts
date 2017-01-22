@@ -6,6 +6,7 @@
     <title>{{title}}</title>
     <script type='text/javascript' src='/vendor/javascripts/jquery-1.11.3.min.js'></script>
     <script type="text/javascript" src='/vendor/javascripts/highcharts/highcharts.js'></script>
+    <script type="text/javascript" src='/vendor/javascripts/highcharts/highcharts-more.js'></script>
     <script type="text/javascript" src='/vendor/javascripts/highcharts/modules/exporting.js'></script>
     <script type='text/javascript' src='/node_modules/handlebars/dist/handlebars.min.js'></script>
     <script type='text/javascript' src='/node_modules/bootstrap/dist/js/bootstrap.min.js'></script>
@@ -19,8 +20,20 @@
 
     <link rel='stylesheet' href='/stylesheets/style.css' />
     <link rel='stylesheet' href='/node_modules/bootstrap/dist/css/bootstrap.min.css' />
+
+    <script type="text/javascript">
+
+      $(function( ) {
+        MC.start( );
+      } );
+
+    </script>
   </head>
   <body>
+    <div class="loading overlay">
+      <div class="spinner"></div>
+      Loading...
+    </div>
     <nav class="navbar navbar-inverse navbar-fixed-top">
       <div class="container-fluid">
         <div class="navbar-header">
@@ -106,13 +119,5 @@
 
       </div>
     </div>
-
-    <script type="text/javascript">
-
-      $(function( ) {
-        MC.start( );
-      } );
-
-    </script>
   </body>
 </html>

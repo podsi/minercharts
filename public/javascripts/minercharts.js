@@ -107,6 +107,7 @@ var app = (function($) {
         dataType: post ? 'json' : 'text',
         beforeSend: function( ) {
           $("#warning-alert").empty( );
+          $(".loading").toggle();
         },
 
         statusCode: {
@@ -123,6 +124,8 @@ var app = (function($) {
       } )
 
       .done(function ( data ) {
+        $(".loading").toggle();
+
         if( !post ) {
           $( "body" ).html( data );
           MC.registerSettingsEvents( );
@@ -149,6 +152,7 @@ var app = (function($) {
       } )
 
       .fail(function( xhr ) {
+        $(".loading").toggle();
         var data = {};
 
         try {

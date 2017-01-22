@@ -145,7 +145,7 @@ function getUsers( project, currentView ) {
     var query = "";
     var params = [ ];
 
-    if( currentView.nav == "productmetrics" && currentView.tab ) {
+    if( currentView.nav == "sentiments" && currentView.tab ) {
       var userQuery = getUserQuery( project, currentView.tab );
 
       query = userQuery.query || "";

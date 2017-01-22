@@ -47,8 +47,9 @@ router.post( '/per_commit', function( req, res, next ) {
       }
     );
 
-  }, reason => {
-    var html = Util.getPartialByName( "info", { message: reason } );
+  }, (msg) => {
+    console.log( "ERROR ------->", msg );
+    var html = Util.getPartialByName( "info", { message: msg } );
 
     res.status( 200 ).send( {
       success: false,

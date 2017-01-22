@@ -36,3 +36,42 @@ a {
     border-right: 1px solid #eee;
   }
 }
+
+.overlay {
+  height: 100%;
+  width: 100%;
+  position: fixed;
+  top: 0;
+  left: 0;
+  background-color: rgb(100,100,100);
+  background-color: rgba(100,100,100, 0.6);
+  overflow-x: hidden;
+  transition: 0.5s;
+
+  display: none;
+  z-index: 10000;
+}
+
+.spinner {
+  border: 7px solid #222222;
+  border-radius: 50%;
+  border-top: 7px solid #337ab7;
+  width: 48px;
+  height: 48px;
+  -webkit-animation: spin 1.3s linear infinite;
+  animation: spin 1.3s linear infinite;
+
+  top: 50%;
+  left: 50%;
+  position: absolute;
+}
+
+@-webkit-keyframes spin {
+  0% { -webkit-transform: rotate(0deg); }
+  100% { -webkit-transform: rotate(360deg); }
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}

@@ -164,6 +164,31 @@ window.MC.Charts = (function($, _) {
     });
   };
 
+  var boxPlotChart = function( opts ) {
+    $( opts.container ).highcharts( {
+      chart: {
+        type: 'boxplot'
+      },
+
+      title: opts.title,
+
+      legend: {
+        enabled: false
+      },
+
+      xAxis: {
+        categories: ['1'],
+        title: {
+          text: 'Experiment No.'
+        }
+      },
+
+      yAxis: opts.yAxis,
+
+      series: opts.series
+    });
+  };
+
   var module = {
 
     createBasicBarChart: function( container, opts ) {
@@ -185,6 +210,12 @@ window.MC.Charts = (function($, _) {
     },
 
     createLineChart: function( container, opts ) {
+    },
+
+    createBoxPlotChart: function( container, opts ) {
+      opts.container = container;
+
+      boxPlotChart( opts );
     }
   };
 

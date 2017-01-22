@@ -4,6 +4,7 @@ window.MC.Sentiments = (function( $ ) {
 
   var module = {
     currentView: { nav: "sentiments" },
+    storagePath: "",
 
     init( ) {
       var active = $( "#sentiments-tabs > li.active" ).
@@ -11,6 +12,8 @@ window.MC.Sentiments = (function( $ ) {
 
       module.currentView.tab = active;
       MC.Settings.write( "currentView", module.currentView );
+
+      module.storagePath = module.currentView.nav + "." + module.currentView.tab;
 
       module.render( );
     },
@@ -66,32 +69,25 @@ window.MC.Sentiments = (function( $ ) {
 
     // ES6 Syntax
     registerEvents( ) {
-      $( "#comloc_loc input" ).on( "change", function( ) {
-        MC.Util.toggleRadio( this.el, $(this).val( ) );
-
-        MC.Settings.write( "productmetrics.comloc.loc", $(this).val( ) );
-        module.loadChart( );
-      } );
-
       // for comsentiment
       $( "#comsentiment_sentiment input" ).on( "change", function( ) {
         MC.Util.toggleRadio( this.el, $(this).val( ) );
 
-        MC.Settings.write( "productmetrics.comsentiment.sentiment", $(this).val( ) );
+        MC.Settings.write( module.storagePath + ".sentiment", $(this).val( ) );
         module.loadChart( );
       } );
 
       $( "#comsentiment_attribute input" ).on( "change", function( ) {
         MC.Util.toggleRadio( this.el, $(this).val( ) );
 
-        MC.Settings.write( "productmetrics.comsentiment.attribute", $(this).val( ) );
+        MC.Settings.write( module.storagePath + ".attribute", $(this).val( ) );
         module.loadChart( );
       } );
 
       $( "#" + module.currentView.tab + "_charttype input" ).on( "change", function( ) {
         MC.Util.toggleRadio( this.el, $(this).val( ) );
 
-        MC.Settings.write( "productmetrics." + module.currentView.tab + ".charttype", $(this).val( ) );
+        MC.Settings.write( module.storagePath + ".charttype", $(this).val( ) );
         module.loadChart( );
       } );
     },
@@ -105,10 +101,8 @@ window.MC.Sentiments = (function( $ ) {
       var user = $( selector ).val( );
       var uname = $( selector ).find(":selected").text( );
 
-      var storagePath = module.currentView.nav + "." + module.currentView.tab;
-
-      MC.Settings.write( storagePath + ".user.id", user );
-      MC.Settings.write( storagePath + ".user.name", uname );
+      MC.Settings.write( module.storagePath + ".user.id", user );
+      MC.Settings.write( module.storagePath + ".user.name", uname );
     },
 
     setCatData( ) {
@@ -116,10 +110,8 @@ window.MC.Sentiments = (function( $ ) {
       var cat = $( selector ).val( );
       var cname = $( selector ).find(":selected").text( );
 
-      var storagePath = module.currentView.nav + "." + module.currentView.tab;
-
-      MC.Settings.write( storagePath + ".category.id", cat );
-      MC.Settings.write( storagePath + ".category.name", cname );
+      MC.Settings.write( module.storagePath + ".category.id", cat );
+      MC.Settings.write( module.storagePath + ".category.name", cname );
     },
 
     loadViewSettings( ) {
@@ -159,7 +151,7 @@ window.MC.Sentiments = (function( $ ) {
         },
 
         done: function( data ) {
-          MC.Charts.createDateLineChart( "#comsentiment-chart", data.comsentiment );
+          MC.Charts.createBoxPlotChart( "#comsentiment-chart", data.comsentiment );
         },
 
         error: function( data ) {

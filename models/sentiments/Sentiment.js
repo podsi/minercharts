@@ -74,14 +74,6 @@ Sentiment = {
     return { series: data, total: total };
   },
 
-  parseSentimentDists( cats, year, attribute ) {
-    switch( attribute ) {
-      case "LOC":
-    }
-  },
-
-
-
   parseForPieChart( cats ) {
     var series = { };
     var data = [ ];
@@ -111,11 +103,35 @@ Sentiment = {
     return { data: data, total: totalAmount };
   },
 
-  parseForBoxPlot( records, attribute ) {
-
+  parseForBoxPlot( records, year, attribute ) {
+    switch( attribute ) {
+      case "LOC":
+        const sums = _.map( records, c => {
+          return c.linesAdded + c.linesRemoved;
+        } );
+        return Sentiment.calcBoxPlotData( sums );
+        break;
+      case "linesAdded":
+        const linesAdded = _.pluck( records, "linesAdded" );
+        return Sentiment.calcBoxPlotData( linesAdded );
+        break;
+      case "linesRemoved":
+        const linesRemoved = _.pluck( records, "linesRemoved" );
+        return Sentiment.calcBoxPlotData( linesRemoved );
+        break;
+      case "sentences":
+        const sentences = _.pluck( records, "sentences" );
+        return Sentiment.calcBoxPlotData( sentences );
+        break;
+      case "words":
+        const wordCount = _.pluck( records, "wordCount" );
+        return Sentiment.calcBoxPlotData( wordCount );
+        break;
+      default: return {};
+    }
   },
 
-  calcBoxPlotData( parsedData ) {
+  calcBoxPlotData( data ) {
     var numberOfBoxes = 1;
     var boxPlotData = {
       boxData: [ ],
@@ -126,12 +142,28 @@ Sentiment = {
     var meanData = [ ];
 
     for(var i = 0; i < numberOfBoxes; i++) {
-      var data = [ ];
       var boxValues  = Sentiment.getBoxValues( data );
 
       boxPlotData.boxData.push( boxValues );
       boxPlotData.meanData.push( Sentiment.mean( data ) );
     }
+
+    let series = [];
+
+    series.push( {
+      name: "Sentiments per commit",
+      data: [
+        [
+          boxPlotData.boxData[ 0 ].min,
+          boxPlotData.boxData[ 0 ].q1,
+          boxPlotData.boxData[ 0 ].median,
+          boxPlotData.boxData[ 0 ].q3,
+          boxPlotData.boxData[ 0 ].max
+        ]
+      ]
+    } );
+
+    boxPlotData.series = series;
 
     return boxPlotData;
   },
@@ -139,11 +171,12 @@ Sentiment = {
   getBoxValues( data ) {
     var boxValues = { };
 
-    boxValues.low = Math.min.apply( Math, data );
+    boxValues.avg = Sentiment.mean( data );
+    boxValues.min = _.min( data );
     boxValues.q1 = Sentiment.getPercentile( data, 25 );
     boxValues.median = Sentiment.getPercentile( data, 50 );
     boxValues.q3 = Sentiment.getPercentile( data, 75 );
-    boxValues.high = Math.max.apply( Math, data );
+    boxValues.max = _.max( data );
 
     return boxValues;
   },
@@ -165,17 +198,10 @@ Sentiment = {
   },
 
   mean( data ) {
-    var len = data.length;
-    var sum = 0;
-
-    for(var i = 0; i < len; i++) {
-      sum += parseFloat( data[ i ] );
-    }
-
-    return (sum / len);
+    return _.sum( data ) / data.length;
   },
 
-  getSentimentsPerSentiment( currentSettings ) {
+  getSentimentsPerCommit( currentSettings ) {
     var sentimentPerSentimentPromise = new Promise( function( resolve, reject ) {
       var select = "";
       var fromTables = "";
@@ -195,17 +221,14 @@ Sentiment = {
             // + " strftime('%m', c.date) as month, "
             + " c.linesAdded, c.linesRemoved, s.sentences, s.wordCount ";
           fromTables = " FROM "
-            + " Sentiments c, Categories cat, SentimentCategories cc, "
-            + " Sentiment s, SentimentSentiment cs ";
+            + " Commits c, Categories cat, CommitCategories cc, "
+            + " Sentiment s, CommitSentiment cs ";
           conditions = " WHERE "
             + " c.project = $project "
-            + " AND cs.SentimentId = c.id "
+            + " AND cs.commitId = c.id "
             + " AND cs.sentimentId = s.id "
-            + " AND cc.SentimentId = c.id "
             + " AND cc.category = cat.id "
             + " AND cat.dictionary = $dict "               // dict
-            + " AND cs.sentimentId = s.id "
-            + " AND c.id = cs.SentimentId "
             + " AND (CASE WHEN $category = -1 THEN 1 ELSE cc.category = $category END) "
             + "   AND (CASE WHEN " + sentiment + " = 200 THEN 1 "
             + "             WHEN " + sentiment + " = 2 THEN s.positive = MAX (s.positive,s.somewhatPositive,s.neutral,s.somewhatNegative,s.negative) "
@@ -249,27 +272,33 @@ Sentiment = {
               reject( err );
             }
 
-            console.log( "!!!!!!!!!!!!!Sentiment dists!!!!!!!!!!!!!!!!!" );
-            console.log( cats );
-
             if( cats.length > 0 ) {
               // TODO: for sentiments --> collect data for each month (so each record)
               var attribute = currentSettings.pmSettings.attribute || "LOC";
-              var parsedData = Sentiment.parseSentimentDists( cats, currentSettings.year, attribute );
+              var parsedData = Sentiment.parseForBoxPlot( cats, currentSettings.year, attribute );
 
               var chartData = {
-                // series: parsedData.series,
-                // title: {
-                //   text: "Sentiment per Sentiment"
-                // },
-                // subtitle: {
-                //   text: currentSettings.year + " total: " + parsedData.total
-                // },
-                // yAxis: {
-                //   title: {
-                //     text: "Sentiments"
-                //   }
-                // }
+                series: parsedData.series,
+                title: {
+                  text: "Sentiment per commit"
+                },
+                yAxis: {
+                  title: {
+                    text: 'Sentiments'
+                  },
+                  plotLines: [{
+                    value: parsedData.meanData[ 0 ],
+                    color: 'red',
+                    width: 1,
+                    label: {
+                      text: 'Theoretical mean: ' + parsedData.meanData[ 0 ],
+                      align: 'center',
+                      style: {
+                        color: 'gray'
+                      }
+                    }
+                  }]
+                }
               };
 
               resolve( chartData );
