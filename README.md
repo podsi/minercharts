@@ -38,6 +38,7 @@ vim config/main.json
 * Compile extension functions for SQLITE 3
 _compile on Mac_
 ```
+cd db
 gcc -g -fPIC -dynamiclib extension-functions.c -o extension-functions.dylib
 ```
 To compile the library for other platforms look at http://www.sqlite.org/loadext.html
