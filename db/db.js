@@ -11,12 +11,14 @@ fs.exists(dbFile, function(exists) {
 	}
 });
 
+console.log( "Current working directory: ", process.cwd( ) );
+
 //DB
 db = new sqlite3.Database(dbFile);
 
 console.log("db initialized");
-
-// db.loadExtension( 'extension-functions.c' );
+db.loadExtension( "./db/extension-functions" );
+console.log( "Extensions loaded!" );
 
 module.exports = {
   all: function(sql, params, callback) {

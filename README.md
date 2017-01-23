@@ -13,8 +13,8 @@ cd minercharts
 npm install
 ```
 
-* Edit main.json to set some configs (port, path to SubCat sqlite db)  
-Root directory for db path is the repo root directory.  
+* Edit main.json to set some configs (port, path to SubCat sqlite db)
+Root directory for db path is the repo root directory.
 Please DO NOT CHANGE the "defaults" part of the `main.json`
 ```sh
 vim config/main.json
@@ -34,6 +34,13 @@ vim config/main.json
   }
 }
 ```
+
+* Compile extension functions for SQLITE 3
+_compile on Mac_
+```
+gcc -g -fPIC -dynamiclib extension-functions.c -o extension-functions.dylib
+```
+To compile the library for other platforms look at http://www.sqlite.org/loadext.html
 
 * Start application
 ```sh

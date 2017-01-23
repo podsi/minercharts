@@ -167,7 +167,8 @@ window.MC.Charts = (function($, _) {
   var boxPlotChart = function( opts ) {
     $( opts.container ).highcharts( {
       chart: {
-        type: 'boxplot'
+        type: 'boxplot',
+        zoomType: 'y'
       },
 
       title: opts.title,
@@ -176,13 +177,7 @@ window.MC.Charts = (function($, _) {
         enabled: false
       },
 
-      xAxis: {
-        categories: ['1'],
-        title: {
-          text: 'Experiment No.'
-        }
-      },
-
+      xAxis: opts.xAxis,
       yAxis: opts.yAxis,
 
       series: opts.series

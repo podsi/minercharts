@@ -75,8 +75,9 @@ router.post( '/load', function( req, res, next ) {
         }
       );
 
-    } ).catch( reason => {
-      var html = Util.getPartialByName( "info", { message: reason } );
+    } ).catch( msg => {
+      console.log( "ERROR ------->", msg );
+      var html = Util.getPartialByName( "info", { message: msg } );
 
       res.status( 200 ).send( {
         success: false,
@@ -91,30 +92,38 @@ router.post( '/load', function( req, res, next ) {
 
 function getCategories( project, currentView ) {
   var catsPromise = new Promise( (resolve, reject) => {
-    var catsQuery = getCatsQuery( project, currentView );
+    if( !project || !project.id ) {
+      return reject( "No project (project ID) selected!" );
+    }
 
-    if( catsQuery ) {
-      var select = catsQuery.select || "";
-      var conditions = catsQuery.conditions || "";
-      var end = catsQuery.end || "";
-      var params = catsQuery.params || [ ];
+    if( project.dictionary && project.dictionary.id ) {
+      var catsQuery = getCatsQuery( project, currentView );
 
-      var query = select + conditions + end;
+      if( catsQuery ) {
+        var select = catsQuery.select || "";
+        var conditions = catsQuery.conditions || "";
+        var end = catsQuery.end || "";
+        var params = catsQuery.params || [ ];
 
-      if( query.length > 0 && params.length > 0 ) {
-        db.all( query, params, function( err, cats ) {
-          if( err ) {
-            console.log( err );
-            reject( err );
-          }
+        var query = select + conditions + end;
 
-          if( cats.length > 0 ) {
-            resolve( cats );
-          } else {
-            reject( "Couldn't find any categories!" );
-          }
-        } );
+        if( query.length > 0 && params.length > 0 ) {
+          db.all( query, params, function( err, cats ) {
+            if( err ) {
+              console.log( err );
+              reject( err );
+            }
+
+            if( cats.length > 0 ) {
+              resolve( cats );
+            } else {
+              reject( "Couldn't find any categories!" );
+            }
+          } );
+        }
       }
+    } else {
+      reject( "No dictionary (dictionary ID) selected!" );
     }
   } );
 

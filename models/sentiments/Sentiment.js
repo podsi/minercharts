@@ -11,195 +11,179 @@ var queries = require( '../../db/queries' );
 
 
 Sentiment = {
-  /**
-   * Parsing the data returned by the DB-Query (result set).
-   * @param  {Array} cats          The categories for each Sentiment grouped by.
-   * @param  {String} year          The year which is used for the total dataset.
-   * @return {Object} An object with keys "series" & "total".
-   */
-  parseSentimentCatsData( cats, year ) {
-    var series = { };
-    var monthTotal = { };
-    var total = 0;
-    var data = [ ];
-    var point;
+  getMaxOutliers( fromTables, conditions, params, data, attribute ) {
+    let outlierFences = Sentiment.getOutlierFences( data );
 
-    _.forEach( cats, function( cat, i ) {
-      if( !monthTotal[ cat.month - 1 ] ) {
-        monthTotal[ cat.month - 1 ] = cat.amount;
-      } else {
-        monthTotal[ cat.month - 1 ] += cat.amount;
-      }
+    let select = "SELECT DISTINCT(" + attribute + ") as max";
+    conditions += " AND (" + attribute + ") > " + outlierFences.outlierMax;
 
-      total += cat.amount;
+    let query = select + fromTables + conditions;
 
-      point = {
-        x: Date.parse( cat.date ),// to show just the month and not the exactly date, use: Date.UTC( year, cat.month - 1),
-        y: cat.amount
-      };
-
-      if( !series[ cat.category ] ) {
-        series[ cat.category ] = {
-          data: [ point ],
-          amount: cat.amount
-        };
-      } else {
-        series[ cat.category ].data.push( point );
-        series[ cat.category ].amount += cat.amount;
-      }
-    } );
-
-    // this would draw a total curve
-    // series[ "total" ] = {
-    //   data: [ ],
-    //   amount: 0
-    // };
-
-    // _.forEach( monthTotal, (val,key) => {
-    //   point = {
-    //     x: Date.UTC( year, key ),
-    //     y: val
-    //   };
-
-    //   series[ "total" ].data.push( point );
-    //   series[ "total" ].amount += val;
-    // });
-
-    _.forEach( series, (obj,key) => {
-      obj.name = key + " (" + obj.amount + ")";
-      obj.data = _.sortByOrder( obj.data, [ "x" ], [ "asc" ] );
-      data.push( obj );
-    } );
-
-    return { series: data, total: total };
+    return query;
   },
 
-  parseForPieChart( cats ) {
-    var series = { };
-    var data = [ ];
-    var totalAmount = 0;
+  getOutlierFences( data ) {
+    // interquartile range
+    let IQR = data.q3 - data.q1;
 
-    _.forEach( cats, function( cat, i ) {
-      if( cat.amount > 0 ) {
-        if( series[ cat.category ] ) {
-          series[ cat.category ].y += cat.amount;
-        } else {
-          series[ cat.category ] = {
-            y: cat.amount
-          };
-        }
+    let outlierMin = data.q1 - 1.5 * IQR;
+    let outlierMax = data.q3 + 1.5 * IQR;
 
-        totalAmount += cat.amount;
-      }
-    } );
+    let extremeMin = data.q1 - 3 * IQR;
+    let extremeMax = data.q3 + 3 * IQR;
 
-    _.forEach( series, (obj,key) => {
-      obj.name = key + " (" + obj.y + ")";
-      obj.y = obj.y / totalAmount;
-
-      data.push( obj );
-    } );
-
-    return { data: data, total: totalAmount };
-  },
-
-  parseForBoxPlot( records, year, attribute ) {
-    switch( attribute ) {
-      case "LOC":
-        const sums = _.map( records, c => {
-          return c.linesAdded + c.linesRemoved;
-        } );
-        return Sentiment.calcBoxPlotData( sums );
-        break;
-      case "linesAdded":
-        const linesAdded = _.pluck( records, "linesAdded" );
-        return Sentiment.calcBoxPlotData( linesAdded );
-        break;
-      case "linesRemoved":
-        const linesRemoved = _.pluck( records, "linesRemoved" );
-        return Sentiment.calcBoxPlotData( linesRemoved );
-        break;
-      case "sentences":
-        const sentences = _.pluck( records, "sentences" );
-        return Sentiment.calcBoxPlotData( sentences );
-        break;
-      case "words":
-        const wordCount = _.pluck( records, "wordCount" );
-        return Sentiment.calcBoxPlotData( wordCount );
-        break;
-      default: return {};
-    }
-  },
-
-  calcBoxPlotData( data ) {
-    var numberOfBoxes = 1;
-    var boxPlotData = {
-      boxData: [ ],
-      meanData: [ ]
+    return {
+      outlierMin: outlierMin,
+      outlierMax: outlierMax,
+      extremeMin: extremeMin,
+      extremeMax: extremeMax
     };
+  },
 
-    var boxData  = [ ];
-    var meanData = [ ];
-
-    for(var i = 0; i < numberOfBoxes; i++) {
-      var boxValues  = Sentiment.getBoxValues( data );
-
-      boxPlotData.boxData.push( boxValues );
-      boxPlotData.meanData.push( Sentiment.mean( data ) );
-    }
-
+  buildBoxPlotData( record ) {
+    let boxPlotData = {};
     let series = [];
 
     series.push( {
       name: "Sentiments per commit",
       data: [
         [
-          boxPlotData.boxData[ 0 ].min,
-          boxPlotData.boxData[ 0 ].q1,
-          boxPlotData.boxData[ 0 ].median,
-          boxPlotData.boxData[ 0 ].q3,
-          boxPlotData.boxData[ 0 ].max
+          record.min,
+          record.q1,
+          record.median,
+          record.q3,
+          record.max
         ]
       ]
     } );
 
     boxPlotData.series = series;
+    boxPlotData.meanData = record.avg;
 
     return boxPlotData;
   },
 
-  getBoxValues( data ) {
-    var boxValues = { };
-
-    boxValues.avg = Sentiment.mean( data );
-    boxValues.min = _.min( data );
-    boxValues.q1 = Sentiment.getPercentile( data, 25 );
-    boxValues.median = Sentiment.getPercentile( data, 50 );
-    boxValues.q3 = Sentiment.getPercentile( data, 75 );
-    boxValues.max = _.max( data );
-
-    return boxValues;
-  },
-
-  getPercentile( data, percentile ) {
-    data.sort( );
-
-    var index = ( percentile / 100 ) * data.length;
-    var result;
-
-    if( Math.floor( index ) == index ) {
-      result = ( data[ ( index - 1 ) ] + data[ index ] ) / 2;
+  getAttributeQueryString( attribute ) {
+    switch( attribute ) {
+      case "LOC":
+        return "c.linesAdded + c.linesRemoved";
+        break;
+      case "linesAdded":
+        return "linesAdded";
+        break;
+      case "linesRemoved":
+        return "linesRemoved";
+        break;
+      case "sentences":
+        return "sentences";
+        break;
+      case "words":
+        return "wordCount";
+        break;
+      default: return {};
     }
-    else {
-      result = data[ Math.floor( index ) ];
-    }
-
-    return result;
   },
 
-  mean( data ) {
-    return _.sum( data ) / data.length;
-  },
+  // THE FOLLOWING FUNCTIONS WHERE USED TO CALCULATE THE DATA FOR THE BOX PLOT
+  // NOW THE extension-functions for sqlite3 ARE USED TO CALCULATE IT
+  //
+  // parseForBoxPlot( records, year, attribute ) {
+  //   switch( attribute ) {
+  //     case "LOC":
+  //       const sums = _.map( records, c => {
+  //         return c.linesAdded + c.linesRemoved;
+  //       } );
+  //       return Sentiment.calcBoxPlotData( sums );
+  //       break;
+  //     case "linesAdded":
+  //       const linesAdded = _.pluck( records, "linesAdded" );
+  //       return Sentiment.calcBoxPlotData( linesAdded );
+  //       break;
+  //     case "linesRemoved":
+  //       const linesRemoved = _.pluck( records, "linesRemoved" );
+  //       return Sentiment.calcBoxPlotData( linesRemoved );
+  //       break;
+  //     case "sentences":
+  //       const sentences = _.pluck( records, "sentences" );
+  //       return Sentiment.calcBoxPlotData( sentences );
+  //       break;
+  //     case "words":
+  //       const wordCount = _.pluck( records, "wordCount" );
+  //       return Sentiment.calcBoxPlotData( wordCount );
+  //       break;
+  //     default: return {};
+  //   }
+  // },
+
+  // calcBoxPlotData( data ) {
+  //   var numberOfBoxes = 1;
+  //   var boxPlotData = {
+  //     boxData: [ ],
+  //     meanData: [ ]
+  //   };
+
+  //   var boxData  = [ ];
+  //   var meanData = [ ];
+
+  //   for(var i = 0; i < numberOfBoxes; i++) {
+  //     var boxValues  = Sentiment.getBoxValues( data );
+
+  //     boxPlotData.boxData.push( boxValues );
+  //     boxPlotData.meanData.push( boxValues.avg );
+  //   }
+
+  //   let series = [];
+
+  //   series.push( {
+  //     name: "Sentiments per commit",
+  //     data: [
+  //       [
+  //         boxPlotData.boxData[ 0 ].min,
+  //         boxPlotData.boxData[ 0 ].q1,
+  //         boxPlotData.boxData[ 0 ].median,
+  //         boxPlotData.boxData[ 0 ].q3,
+  //         boxPlotData.boxData[ 0 ].max
+  //       ]
+  //     ]
+  //   } );
+
+  //   boxPlotData.series = series;
+
+  //   return boxPlotData;
+  // },
+
+  // getBoxValues( data ) {
+  //   var boxValues = { };
+
+  //   boxValues.avg = Sentiment.mean( data );
+  //   boxValues.min = _.min( data );
+  //   boxValues.q1 = Sentiment.getPercentile( data, 25 );
+  //   boxValues.median = Sentiment.getPercentile( data, 50 );
+  //   boxValues.q3 = Sentiment.getPercentile( data, 75 );
+  //   boxValues.max = _.max( data );
+
+  //   return boxValues;
+  // },
+
+  // getPercentile( data, percentile ) {
+  //   data.sort( );
+
+  //   var index = ( percentile / 100 ) * data.length;
+  //   var result;
+
+  //   if( Math.floor( index ) == index ) {
+  //     result = ( data[ ( index - 1 ) ] + data[ index ] ) / 2;
+  //   }
+  //   else {
+  //     result = data[ Math.floor( index ) ];
+  //   }
+
+  //   return result;
+  // },
+
+  // mean( data ) {
+  //   return _.sum( data ) / data.length;
+  // },
 
   getSentimentsPerCommit( currentSettings ) {
     var sentimentPerSentimentPromise = new Promise( function( resolve, reject ) {
@@ -215,11 +199,33 @@ Sentiment = {
         } else if( currentSettings.uid == null ) {
           reject( "Please select a user!" );
         } else {
-          var sentiment = currentSettings.pmSettings.sentiment;
+          if( !currentSettings.pmSettings ) {
+            reject( "No sentiment settings set, using default settings." );
+          }
+
+          let categoryId = -1;
+          let category = "All";
+
+          if( !currentSettings.pmSettings.category ) {
+            console.log( "No category set, using all category as default." );
+          } else {
+            categoryId = currentSettings.pmSettings.category.id;
+            category = currentSettings.pmSettings.category.name;
+          }
+
+          var sentiment = currentSettings.pmSettings.sentiment || 200;
+          var attribute = currentSettings.pmSettings.attribute || "LOC";
+          var attQueryString = Sentiment.getAttributeQueryString( attribute );
 
           select = "SELECT "
-            // + " strftime('%m', c.date) as month, "
-            + " c.linesAdded, c.linesRemoved, s.sentences, s.wordCount ";
+            + " strftime('%m', c.date) as month, "
+            + " AVG(" + attQueryString + ") as avg, "
+            + " MEDIAN(" + attQueryString + ") as median, "
+            + " LOWER_QUARTILE(" + attQueryString + ") as q1, "
+            + " UPPER_QUARTILE(" + attQueryString + ") as q3, "
+            + " MIN(" + attQueryString + ") as min, "
+            + " MAX(" + attQueryString + ") as max, "
+            + " COUNT(*) as amount"
           fromTables = " FROM "
             + " Commits c, Categories cat, CommitCategories cc, "
             + " Sentiment s, CommitSentiment cs ";
@@ -241,7 +247,7 @@ Sentiment = {
           params = {
             $project: currentSettings.pid,
             $dict: currentSettings.dict,
-            $category: currentSettings.pmSettings.category.id
+            $category: categoryId
           };
 
           if( currentSettings.year !== "all" ) {
@@ -264,49 +270,80 @@ Sentiment = {
           }
 
           query += select + fromTables + conditions;
-          // query += " GROUP BY strftime('%m', c.date)";
 
-          db.all( query, params, function( err, cats ) {
-            if( err ) {
-              console.log( err );
-              reject( err );
-            }
+          db.serialize( ( ) => {
+            db.get( query, params, function( err, record ) {
+              if( err ) {
+                console.log( err );
+                reject( err );
+              }
 
-            if( cats.length > 0 ) {
-              // TODO: for sentiments --> collect data for each month (so each record)
-              var attribute = currentSettings.pmSettings.attribute || "LOC";
-              var parsedData = Sentiment.parseForBoxPlot( cats, currentSettings.year, attribute );
+              if( record.amount > 0 ) {
+                var parsedData = Sentiment.buildBoxPlotData( record );
+                var q = Sentiment.getMaxOutliers( fromTables, conditions, params, record, attQueryString );
 
-              var chartData = {
-                series: parsedData.series,
-                title: {
-                  text: "Sentiment per commit"
-                },
-                yAxis: {
-                  title: {
-                    text: 'Sentiments'
-                  },
-                  plotLines: [{
-                    value: parsedData.meanData[ 0 ],
-                    color: 'red',
-                    width: 1,
-                    label: {
-                      text: 'Theoretical mean: ' + parsedData.meanData[ 0 ],
-                      align: 'center',
-                      style: {
-                        color: 'gray'
-                      }
+                db.all( q, params, ( err, maxOutliers ) => {
+                  let mol = [];
+
+                  _.each( maxOutliers, ( mo ) => {
+                    mol.push( [ 0, mo.max ] );
+                  } );
+
+                  parsedData.series[ 0 ].data[ 0 ][ 4 ] = Sentiment.getOutlierFences( record ).outlierMax;
+
+                  parsedData.series.push( {
+                    name: 'Outlier',
+                    color: '#7cb5ec',
+                    type: 'scatter',
+                    data: mol,
+                    marker: {
+                        fillColor: 'white',
+                        lineWidth: 1,
+                        lineColor: '#7cb5ec'
+                    },
+                    tooltip: {
+                      pointFormat: `${attribute}: {point.y}`
                     }
-                  }]
-                }
-              };
+                  } );
 
-              resolve( chartData );
-            } else {
-              reject( "Couldn't find any information with current settings!"
-                + " Try to change the filters (project, dictionary, year)!" );
-            }
-          } ) ;
+                  var chartData = {
+                    series: parsedData.series,
+                    title: {
+                      text: "Sentiment per commit"
+                    },
+
+                    xAxis: {
+                      categories: [ category ],
+                      title: {
+                        text: "Category"
+                      }
+                    },
+
+                    yAxis: {
+                      title: {
+                        text: attribute
+                      },
+                      plotLines: [{
+                        value: parsedData.meanData,
+                        color: 'red',
+                        width: 1,
+                        label: {
+                          text: 'Theoretical mean: ' + parsedData.meanData,
+                          align: 'center',
+                          style: {
+                            color: 'gray'
+                          }
+                        }
+                      }]
+                    }
+                  };
+                  resolve( chartData );
+                } );
+              } else {
+                reject( "Couldn't find any information with current settings!" );
+              }
+            } ) ;
+          } );
         }
       } else {
         reject( "Please select a project!" );
