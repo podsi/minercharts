@@ -1,0 +1,9 @@
+<label for="resolution" class="col-sm-2 control-label">Resolution</label>
+<div class="col-sm-4">
+  <select name="resolution" class="form-control">
+      <option value="-1">All</option>
+    {{#each resolutions}}
+      <option value="{{id}}">{{name}}</option>
+    {{/each}}
+  </select>
+</div>

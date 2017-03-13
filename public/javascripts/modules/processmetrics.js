@@ -4,6 +4,7 @@ window.MC.Processmetrics = (function( $ ) {
 
   var module = {
     currentView: { nav: "processmetrics" },
+    storagePath: "",
 
     init( ) {
       var active = $( "#processmetrics-tabs > li.active" ).
@@ -11,6 +12,8 @@ window.MC.Processmetrics = (function( $ ) {
 
       module.currentView.tab = active;
       MC.Settings.write( "currentView", module.currentView );
+
+      module.storagePath = module.currentView.nav + "." + module.currentView.tab;
 
       module.render( );
     },
@@ -28,9 +31,12 @@ window.MC.Processmetrics = (function( $ ) {
           $( "#processmetrics-panel" ).html( data.partials.pmBody );
 
           module.renderUsers( data );
+          module.renderCategories( data );
+          module.renderFilters( data );
           module.loadViewSettings( );
 
           module.registerUserChangedEvents( );
+          module.registerFilterChangedEvents( );
           module.registerEvents( );
 
           module.loadChart( );
@@ -42,9 +48,41 @@ window.MC.Processmetrics = (function( $ ) {
       $( "#" + module.currentView.tab + "_users" ).html( data.partials.users );
     },
 
+    renderCategories( data ) {
+      if( module.currentView.tab === "bcatsauthor" ) {
+        $( "#" + module.currentView.tab + "_categories" ).html( data.partials.bcats );
+      }
+    },
+
+    renderFilters( data ) {
+      if( module.currentView.tab === "commentsuser" || module.currentView.tab === "bugsattribute" ) {
+        $( "#" + module.currentView.tab + "_priority" ).html( data.partials.priorities );
+        $( "#" + module.currentView.tab + "_severity" ).html( data.partials.severities );
+        $( "#" + module.currentView.tab + "_resolution" ).html( data.partials.resolutions );
+        $( "#" + module.currentView.tab + "_opsys" ).html( data.partials.opsys );
+        $( "#" + module.currentView.tab + "_platform" ).html( data.partials.platforms );
+        $( "#" + module.currentView.tab + "_version" ).html( data.partials.versions );
+      }
+    },
+
     registerUserChangedEvents( ) {
       $( "#" + module.currentView.tab + "_users select[name='users']" ).on( "change", function( evt ) {
         module.setUserData( );
+        module.loadChart( );
+      } );
+    },
+
+    registerFilterChangedEvents( ) {
+      const filters = [ 'priority', 'severity', 'resolution', 'opsys', 'platform', 'version' ];
+
+      filters.forEach( module.registerFilterChangedEvent.bind( this ) );
+    },
+
+    registerFilterChangedEvent( filter ) {
+      const selector = "#" + module.currentView.tab + "_" + filter + " select[name='" + filter + "']";
+
+      $( selector ).on( "change", function( evt ) {
+        module.setFilterData( filter, selector );
         module.loadChart( );
       } );
     },
@@ -58,11 +96,16 @@ window.MC.Processmetrics = (function( $ ) {
         module.loadBugStatus( );
       } );
 
-      $( "#bstatuser_charttype input" ).on( "change", function( ) {
+      $( "#" + module.currentView.tab + "_charttype input" ).on( "change", function( ) {
         MC.Util.toggleRadio( this.el, $(this).val( ) );
 
-        MC.Settings.write( "processmetrics.bstatuser.charttype", $(this).val( ) );
-        module.loadBugStatus( );
+        MC.Settings.write( module.storagePath + ".charttype", $(this).val( ) );
+
+        if( module.currentView.tab === "bstatuser" ) {
+          module.loadBugStatus( );
+        } else if( module.currentView.tab === "commentsuser" ) {
+          module.loadComments( );
+        }
       } );
     },
 
@@ -75,17 +118,19 @@ window.MC.Processmetrics = (function( $ ) {
       var user = $( selector ).val( );
       var uname = $( selector ).find(":selected").text( );
 
-      var storagePath = module.currentView.nav + "." + module.currentView.tab;
+      MC.Settings.write( module.storagePath + ".user.id", user );
+      MC.Settings.write( module.storagePath + ".user.name", uname );
+    },
 
-      MC.Settings.write( storagePath + ".user.id", user );
-      MC.Settings.write( storagePath + ".user.name", uname );
+    setFilterData( filter, selector ) {
+      var val = $( selector ).val( );
+      MC.Settings.write( module.storagePath + ".filter." + filter, val );
     },
 
     loadViewSettings( ) {
       var nav = module.currentView.nav;
       var tab = module.currentView.tab;
 
-      var storagePath = nav + "." + tab;
       var pmSettings = MC.Settings.read( nav );
       var userSelector = "#" + tab + "_users select[name='users']";
 
@@ -97,18 +142,31 @@ window.MC.Processmetrics = (function( $ ) {
           openclosed = pmSettings.bstatuser.openclosed;
         }
 
-        MC.Settings.write( storagePath + ".openclosed", openclosed );
+        MC.Settings.write( module.storagePath + ".openclosed", openclosed );
         MC.Util.toggleRadio( "#bstatuser_status input", openclosed );
       }
 
       var chartType = "trend";
-      if( pmSettings && pmSettings[ tab ]
-        && pmSettings[ tab ].charttype ) {
-        chartType = pmSettings[ tab ].charttype;
+      if( pmSettings && pmSettings[ tab ] ) {
+        if( pmSettings[ tab ].charttype ) {
+          chartType = pmSettings[ tab ].charttype;
+
+          MC.Util.toggleRadio( "#" + tab + "_charttype input", chartType );
+          MC.Settings.write( module.storagePath + ".charttype", chartType );
+        }
+
+        if( pmSettings[ tab ].filter ) {
+          const filters = [ 'priority', 'severity', 'resolution', 'opsys', 'platform', 'version' ];
+
+          filters.forEach( function(f) {
+            const selector = "#" + module.currentView.tab + "_" + f + " select[name='" + f + "']";
+            $( selector ).val( pmSettings[ tab ].filter[ f ] || "-1" );
+          }.bind( this ) );
+        }
       }
 
       if( tab === "bstatuser" || tab === "commentsuser" ) {
-        MC.Settings.write( storagePath + ".charttype", chartType );
+        MC.Settings.write( module.storagePath + ".charttype", chartType );
         MC.Util.toggleRadio( "#" + tab + "_charttype input", chartType );
       }
 
@@ -121,13 +179,13 @@ window.MC.Processmetrics = (function( $ ) {
       if( tab === "bcatsauthor" ) module.loadBugCats( );
       else if( tab === "bstatuser" ) module.loadBugStatus( );
       else if( tab === "commentsuser" ) module.loadComments( );
-      else if( tab === "bugsuser" ) module.loadBugs( );
+      else if( tab === "bugsattribute" ) module.loadBugsWithAttributes( );
       else if( tab === "patchesuser" ) module.loadPatches( );
     },
 
     loadBugCats( opts ) {
       MC.ajax( {
-        url: "/processmetrics/bug_cats/per_author",
+        url: "/processmetrics/bug_severities/per_author",
         params: {
           project: MC.Settings.read( "project" ) || { },
           pmSettings: MC.Settings.read( "processmetrics" )
@@ -190,7 +248,7 @@ window.MC.Processmetrics = (function( $ ) {
           if( chartType === "trend" ) {
             MC.Charts.createDateLineChart( "#process-commentsuser-chart", data.commentsuser );
           } else if( chartType === "boxplot" ) {
-
+            MC.Charts.createBoxPlotChart( "#process-commentsuser-chart", data.commentsuser );
           }
         },
 
@@ -200,16 +258,16 @@ window.MC.Processmetrics = (function( $ ) {
       } );
     },
 
-    loadBugs( opts ) {
+    loadBugsWithAttributes( opts ) {
       MC.ajax( {
-        url: "/processmetrics/bugs_user/per_user",
+        url: "/processmetrics/bugs_attribute/with_attributes",
         params: {
           project: MC.Settings.read( "project" ) || { },
           pmSettings: MC.Settings.read( "processmetrics" )
         },
 
         done: function( data ) {
-          MC.Charts.createDateLineChart( "#process-bugsuser-chart", data.bugsuser );
+          MC.Charts.createDateLineChart( "#process-bugsattribute-chart", data.bugsattribute );
         },
 
         error: function( data ) {
@@ -229,6 +287,7 @@ window.MC.Processmetrics = (function( $ ) {
         },
 
         done: function( data ) {
+          debugger;
           MC.Charts.createDateLineChart( "#process-patchesuser-chart", data.patchesuser );
         },
 

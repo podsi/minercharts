@@ -247,7 +247,7 @@ Commit = {
               reject( "Couldn't find any bugs for user '" + currentSettings.uname
                 + "'. Try to change the filters (project, dictionary, year)!" );
             }
-          } ) ;
+          } );
         }
       } else {
         reject( "Please select a project!" );
@@ -414,9 +414,11 @@ Commit = {
 
           if( currentSettings.pmSettings.loc ) {
             if( currentSettings.pmSettings.loc === "added" ) {
-              select += ", Commits.linesAdded as amount ";
+              select += ", SUM(Commits.linesAdded) as amount ";
+            } else if( currentSettings.pmSettings.loc === "removed" ) {
+              select += ", SUM(Commits.linesRemoved) as amount ";
             } else {
-              select += ", Commits.linesRemoved as amount ";
+              select += ", SUM(Commits.linesAdded + Commits.linesRemoved) as amount ";
             }
           }
 
@@ -435,7 +437,7 @@ Commit = {
               var chartData = {
                 series: parsedData.series,
                 title: {
-                  text: "LOC per Commit"
+                  text: `${currentSettings.pmSettings.loc} LOC per Commit`
                 },
                 subtitle: {
                   text: currentSettings.year + " total: " + parsedData.total

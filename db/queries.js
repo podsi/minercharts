@@ -209,9 +209,9 @@ var queries = {
 
   SELECT_BUG_CATEGORIES_BY_PROJECT_AND_DICT_AND_IDENTITY_AND_YEAR:
       "SELECT "
-    + " Categories.name as category, COUNT(*) as amount, Bugs.creation, CAST(strftime('%m', Bugs.creation) AS INTEGER) as month "
+    + " Severity.name as category, COUNT(DISTINCT(Bugs.id)) as amount, Bugs.creation, CAST(strftime('%m', Bugs.creation) AS INTEGER) as month "
     + "FROM "
-    + " Categories, Bugs, BugCategories, Components "
+    + " Severity, Categories, Bugs, BugCategories, Components "
     + "WHERE "
     + " Bugs.id = BugCategories.bug "
     + " AND Components.id = Bugs.component "
@@ -219,6 +219,7 @@ var queries = {
     + " AND Categories.id = BugCategories.category "
     + " AND Categories.dictionary = ? "
     + " AND Bugs.identity = ? "
+    + " AND Severity.id = Bugs.severity "
     + " AND CAST(strftime('%Y', Bugs.creation) AS INTEGER) = ? "           // year
     + " GROUP BY BugCategories.category ",
 
@@ -226,10 +227,13 @@ var queries = {
       "SELECT "
     + " Severity.name as category, COUNT(DISTINCT(Bugs.id)) as amount, Bugs.creation, CAST(strftime('%m', Bugs.creation) AS INTEGER) as month "
     + "FROM "
-    + " Severity, Bugs, Components "
+    + " Severity, Categories, Bugs, BugCategories, Components "
     + "WHERE "
     + " Components.id = Bugs.component "
+    + " AND Bugs.id = BugCategories.bug "
     + " AND Components.project = ?   "
+    + " AND Categories.id = BugCategories.category "
+    + " AND Categories.dictionary = ? "
     + " AND Severity.id = Bugs.severity "
     + " GROUP BY strftime('%Y-%m-%d', Bugs.creation)",
 
@@ -251,28 +255,46 @@ var queries = {
       "SELECT "
     + " Severity.name as category, COUNT(DISTINCT(Bugs.id)) as amount, Bugs.creation, CAST(strftime('%m', Bugs.creation) AS INTEGER) as month "
     + "FROM "
-    + " Severity, Bugs, Components "
-    + "WHERE "
-    + " Components.id = Bugs.component "
-    + " AND Components.project = ?   "
-    + " AND Severity.id = Bugs.severity "
-    + " AND CAST(strftime('%Y', Bugs.creation) AS INTEGER) = ? "           // year
-    + " GROUP BY strftime('%Y-%m-%d', Bugs.creation)",
-    // + " GROUP BY strftime('%m', Bugs.creation)",
-
-  SELECT_BUG_CATEGORIES_BY_PROJECT_AND_DICT_AND_IDENTITY:
-      "SELECT "
-    + " Categories.name as category, COUNT(*) as amount, Bugs.creation, CAST(strftime('%m', Bugs.creation) AS INTEGER) as month "
-    + "FROM "
-    + " Categories, Bugs, BugCategories, Components "
+    + " Severity, Categories, Bugs, BugCategories, Components "
     + "WHERE "
     + " Bugs.id = BugCategories.bug "
     + " AND Components.id = Bugs.component "
     + " AND Components.project = ?   "
+    + " AND Severity.id = Bugs.severity "
+    + " AND Categories.id = BugCategories.category "
+    + " AND Categories.dictionary = ? "
+    + " AND CAST(strftime('%Y', Bugs.creation) AS INTEGER) = ? "           // year
+    + " GROUP BY strftime('%Y-%m-%d', Bugs.creation)",
+    // + " GROUP BY strftime('%m', Bugs.creation)",
+
+    SELECT_BUG_CATEGORIES_BY_PROJECT_AND_DICT_AND_IDENTITY:
+      "SELECT "
+    + " Severity.name as category, COUNT(DISTINCT(Bugs.id)) as amount, Bugs.creation, CAST(strftime('%m', Bugs.creation) AS INTEGER) as month "
+    + "FROM "
+    + " Categories, Severity, Bugs, BugCategories, Components "
+    + "WHERE "
+    + " Bugs.id = BugCategories.bug "
+    + " AND Components.id = Bugs.component "
+    + " AND Components.project = ?   "
+    + " AND Severity.id = Bugs.severity "    
     + " AND Categories.id = BugCategories.category "
     + " AND Categories.dictionary = ? "
     + " AND Bugs.identity = ? "
     + " GROUP BY BugCategories.category ",
+
+  // SELECT_BUG_CATEGORIES_BY_PROJECT_AND_DICT_AND_IDENTITY:
+  //     "SELECT "
+  //   + " Categories.name as category, COUNT(*) as amount, Bugs.creation, CAST(strftime('%m', Bugs.creation) AS INTEGER) as month "
+  //   + "FROM "
+  //   + " Categories, Bugs, BugCategories, Components "
+  //   + "WHERE "
+  //   + " Bugs.id = BugCategories.bug "
+  //   + " AND Components.id = Bugs.component "
+  //   + " AND Components.project = ?   "
+  //   + " AND Categories.id = BugCategories.category "
+  //   + " AND Categories.dictionary = ? "
+  //   + " AND Bugs.identity = ? "
+  //   + " GROUP BY BugCategories.category ",
 
   SELECT_LINKED_COMMITS:
       "SELECT "

@@ -110,7 +110,10 @@
                   <label for="openclosed" class="col-sm-2 control-label">Lines</label>
                   <div class="col-sm-4">
                     <label class="radio-inline">
-                      <input type="radio" name="loc" id="linesAdded" value="added" checked="checked"> added
+                      <input type="radio" name="loc" id="all" value="all" checked="checked"> all
+                    </label>
+                    <label class="radio-inline">
+                      <input type="radio" name="loc" id="linesAdded" value="added"> added
                     </label>
                     <label class="radio-inline">
                       <input type="radio" name="loc" id="linesRemoved" value="removed"> removed
@@ -119,7 +122,7 @@
                 </div>
 
                 {{!-- switch chart type control --}}
-                <div class="row" id="comloc_charttype">
+                {{!--<div class="row" id="comloc_charttype">
                   <label for="charttype" class="col-sm-2 control-label">Chart-Type</label>
                   <div class="col-sm-4">
                     <label class="radio-inline">
@@ -129,7 +132,7 @@
                       <input type="radio" name="chartype" id="charttypeboxplot" value="boxplot"> boxplot
                     </label>
                   </div>
-                </div>
+                </div>--}}
               </div>
             </form>
 

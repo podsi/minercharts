@@ -137,7 +137,7 @@ window.MC.Productmetrics = (function( $ ) {
       }
 
       if( !loc ) {
-        MC.Settings.write( storagePath + ".loc", "added" );
+        MC.Settings.write( storagePath + ".loc", "all" );
       }
     },
 
@@ -169,9 +169,12 @@ window.MC.Productmetrics = (function( $ ) {
       var pmSettings = MC.Settings.read( nav );
       var userSelector = "#" + tab + "_users select[name='users']";
 
-      if( pmSettings && pmSettings[ tab ]
-        && pmSettings[ tab ].user ) {
-        $( userSelector ).val( pmSettings[ tab ].user.id );
+      if( pmSettings && pmSettings[ tab ] ) {
+        if( pmSettings[ tab ].user && pmSettings[ tab ].user.id ) {
+          $( userSelector ).val( pmSettings[ tab ].user.id );
+        } else {
+          $( userSelector ).val( "-1" );
+        }
 
         if( tab === "commodule" && pmSettings[ tab ].module ) {
           var selector = "#" + module.currentView.tab + "_modules select[name='modules']";

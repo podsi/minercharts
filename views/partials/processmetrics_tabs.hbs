@@ -1,7 +1,7 @@
 <!-- Nav tabs -->
 <ul id="processmetrics-tabs" class="nav nav-tabs" role="tablist">
   <li id="bcatsauthor-tab" role="presentation" class="{{bcatsauthor}}">
-    <a href="/processmetrics/bug_cats" aria-controls="bcatsauthor" role="tab">Bug Categories</a>
+    <a href="/processmetrics/bug_severities" aria-controls="bcatsauthor" role="tab">Bug Severities</a>
   </li>
   <li id="bstatuser-tab" role="presentation" class="{{bstatuser}}">
     <a href="/processmetrics/bug_status" aria-controls="bstatuser" role="tab">Bug Status (open/closed)</a>
@@ -34,6 +34,11 @@
             <form class="form-horizontal">
               <div class="form-group form-group-sm">
                 <div class="row" id="bcatsauthor_users"></div>
+
+                {{!-- switch bug categories control --}}
+                {{!--<div class="row" id="bcatsauthor_categories">
+                  {{! here goes the categories checkboxes }}
+                </div>--}}
 
             {{!-- switch chart type control --}}
 {{!--             <label class="radio-inline">
@@ -139,6 +144,34 @@
                 {{!-- switch user control --}}
                 <div class="row" id="commentsuser_users"></div>
 
+                {{!-- BEGIN Filter --}}
+
+                <div class="row" id="commentsuser_priority">
+                  {{!-- here goes the priority dropdown --}}
+                </div>
+
+                <div class="row" id="commentsuser_severity">
+                  {{!-- here goes the severity dropdown --}}
+                </div>
+
+                <div class="row" id="commentsuser_resolution">
+                  {{!-- here goes the resolution dropdown --}}
+                </div>
+
+                <div class="row" id="commentsuser_opsys">
+                  {{!-- here goes the opsys dropdown --}}
+                </div>
+
+                <div class="row" id="commentsuser_platform">
+                  {{!-- here goes the platform dropdown --}}
+                </div>
+
+                <div class="row" id="commentsuser_version">
+                  {{!-- here goes the version dropdown --}}
+                </div>
+
+                {{!-- END Filter --}}
+
                 {{!-- switch chart type control --}}
                 <div class="row" id="commentsuser_charttype">
                   <label for="charttype" class="col-sm-2 control-label">Chart-Type</label>
@@ -169,7 +202,63 @@
 
   {{!-- issues per attribute --}}
   <div role="tabpanel" class="tab-pane {{bugsattribute}}" id="bugsattribute">
-  bugs per attribute
+    <div class="row">
+      <br>
+
+      <div class="col-md-12">
+        <div class="panel panel-default">
+          <div class="panel-heading">
+            <h3 class="panel-title"></h3>
+            <br>
+
+            <form class="form-horizontal">
+              <div class="form-group form-group-sm">
+                
+                {{!-- switch user control --}}
+                <div class="row" id="bugsattribute_users"></div>
+
+                {{!-- BEGIN Filter --}}
+
+                <div class="row" id="bugsattribute_priority">
+                  {{!-- here goes the priority dropdown --}}
+                </div>
+
+                <div class="row" id="bugsattribute_severity">
+                  {{!-- here goes the severity dropdown --}}
+                </div>
+
+                <div class="row" id="bugsattribute_resolution">
+                  {{!-- here goes the resolution dropdown --}}
+                </div>
+
+                <div class="row" id="bugsattribute_opsys">
+                  {{!-- here goes the opsys dropdown --}}
+                </div>
+
+                <div class="row" id="bugsattribute_platform">
+                  {{!-- here goes the platform dropdown --}}
+                </div>
+
+                <div class="row" id="bugsattribute_version">
+                  {{!-- here goes the version dropdown --}}
+                </div>
+
+                {{!-- END Filter --}}
+
+              </div>
+            </form>
+
+          </div> {{!-- panel-heading --}}
+
+          <div class="panel-body">
+            <div id="process-bugsattribute-chart">
+              {{!-- here goes the chart --}}
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
   </div>
 
   {{!-- patches per user --}}

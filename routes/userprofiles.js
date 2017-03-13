@@ -38,7 +38,7 @@ router.post( '/load', function( req, res, next ) {
   if( project && project.dictionary &&
     project.dictionary.context !== dictContext && project.dictionary.context !== "all" ) {
 
-    data.message = "No data for current dictionary! Use a '" + dictContext + "' dictionary!";
+    data.message = `No data for current dictionary! Use a '${dictContext}' dictionary!`;
 
     if( currentView.tab ) {
       data[ currentView.tab ] = "active";

@@ -4,6 +4,8 @@ var nconf = require('nconf');
 var config = require('../config/config');
 var hbs = require('hbs');
 var Util = require('../helpers/util');
+var Common = require('../models/common/Common');
+var Bug = require( '../models/processmetrics/Bug' );
 var Promise = require('bluebird');
 
 // load the modern build
@@ -13,7 +15,7 @@ var db = require( '../db/db' );
 var queries = require( '../db/queries' );
 
 router.get('/', function(req, res, next) {
-  res.redirect( "processmetrics/bug_cats" );
+  res.redirect( "processmetrics/bug_severities" );
 });
 
 router.post( '/load', function( req, res, next ) {
@@ -47,9 +49,72 @@ router.post( '/load', function( req, res, next ) {
 
     pmBody = Util.getPartialByName( "processmetrics_tabs", data );
 
-    getUsers( project, currentView ).then( users => {
+    var usersPromise = getUsers( project, currentView );
+    var promises = [ ];
+
+    if( currentView.tab === "commentsuser" || currentView.tab === "bugsattribute" ) {
+      var prioritiesP = Common.getPriorities( project );
+      var severitiesP = Common.getSeverities( project );
+      var resolutionsP = Common.getResolutions( project );
+      var opsysP = Common.getOperationSystems( project );
+      var platformsP = Common.getPlatforms( project );
+      var versionsP = Common.getVersions( project );
+
+      promises = [ usersPromise, prioritiesP, severitiesP, resolutionsP, opsysP, platformsP, versionsP ];
+    } else if( currentView.tab === "bcatsauthor" ) {
+      var bugCatsP = Common.getBugCategories( project );
+
+      promises = [ usersPromise, bugCatsP ];
+    } else {
+      promises = [ usersPromise ];
+    }
+
+    Promise.all( promises ).then( values => {
+      var users = values[ 0 ];
+
       if( users && users.length > 0 ) {
         uiSettings.partials.users = Util.getPartialByName( "users", { users: users } );
+      }
+
+      if( currentView.tab === "bcatsauthor" ) {
+        var bcats = values[ 1 ];
+
+        if( bcats && bcats.length > 0 ) {
+          uiSettings.partials.bcats = Util.getPartialByName( "categories", { cats: bcats } );
+        }
+      }
+
+      if( ( currentView.tab === "commentsuser" || currentView.tab === "bugsattribute" ) && values.length > 1 ) {
+        var priorities = values[ 1 ];
+        var severities = values[ 2 ];
+        var resolutions = values[ 3 ];
+        var opsys = values[ 4 ];
+        var platforms = values[ 5 ];
+        var versions = values[ 6 ];
+
+        if( priorities && priorities.length > 0 ) {
+          uiSettings.partials.priorities = Util.getPartialByName( "priorities", { priorities: priorities } );
+        }
+
+        if( severities && severities.length > 0 ) {
+          uiSettings.partials.severities = Util.getPartialByName( "severities", { severities: severities } );
+        }
+
+        if( resolutions && resolutions.length > 0 ) {
+          uiSettings.partials.resolutions = Util.getPartialByName( "resolutions", { resolutions: resolutions } );
+        }
+
+        if( opsys && opsys.length > 0 ) {
+          uiSettings.partials.opsys = Util.getPartialByName( "opsys", { opsys: opsys } );
+        }
+
+        if( platforms && platforms.length > 0 ) {
+          uiSettings.partials.platforms = Util.getPartialByName( "platforms", { platforms: platforms } );
+        }
+
+        if( versions && versions.length > 0 ) {
+          uiSettings.partials.versions = Util.getPartialByName( "versions", { versions: versions } );
+        }
       }
 
       uiSettings.partials.pmBody = pmBody;
@@ -62,8 +127,9 @@ router.post( '/load', function( req, res, next ) {
         }
       );
 
-    }, reason => {
-      var html = Util.getPartialByName( "info", { message: reason } );
+    } ).catch( msg => {
+      console.log( "ERROR ------->", msg );
+      var html = Util.getPartialByName( "info", { message: msg } );
 
       res.status( 200 ).send( {
         success: false,
@@ -116,6 +182,7 @@ function getUserQuery( project, tab ) {
     case "bcatsauthor":
     case "bstatuser":
     case "bugsuser":
+    case "bugsattribute":
       if( project.dictionary && project.dictionary.context != "all" ) {
         if( project.year && project.year != "all" ) {
           defaults.query += " AND cat.dictionary = ? "
@@ -192,7 +259,7 @@ function getUserQuery( project, tab ) {
 function getUserQueryDefaults( project, tab ) {
   var defaults = { query: "", params: [ ] };
 
-  if( tab === "bcatsauthor" || tab === "bstatuser" || tab === "bugsuser" ) {
+  if( tab === "bcatsauthor" || tab === "bstatuser" || tab === "bugsuser" || tab === "bugsattribute" ) {
     defaults.query = "SELECT DISTINCT u.name as username, "
       + " u.id as uid, "
       + " i.id as iid, "

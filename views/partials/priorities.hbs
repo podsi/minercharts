@@ -1,0 +1,9 @@
+<label for="priority" class="col-sm-2 control-label">Priority</label>
+<div class="col-sm-4">
+  <select name="priority" class="form-control">
+      <option value="-1">All</option>
+    {{#each priorities}}
+      <option value="{{id}}">{{name}}</option>
+    {{/each}}
+  </select>
+</div>

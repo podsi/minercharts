@@ -21,9 +21,10 @@ var upBugs = require('./userprofiles/bugs');
 
 var sentiments = require('./sentiments');
 var commitsPerSentiment = require('./sentiments/commit_sentiment');
+var bugCommentPerSentiment = require('./sentiments/bug_comment_sentiment');
 
 var processMetrics = require('./processmetrics');
-var bugCategories = require('./processmetrics/bug_cats');
+var bugCategories = require('./processmetrics/bug_severities');
 var bugStatus = require('./processmetrics/bug_status');
 var commentsUser = require('./processmetrics/comments_user');
 var bugsAttr = require('./processmetrics/bugs_attribute');
@@ -75,9 +76,10 @@ router.use( '/userprofiles/bugs', upBugs );
 
 router.use( '/sentiments', sentiments );
 router.use( '/sentiments/commit_sentiment', commitsPerSentiment );
+router.use( '/sentiments/bug_comment_sentiment', bugCommentPerSentiment );
 
 router.use( '/processmetrics', processMetrics );
-router.use( '/processmetrics/bug_cats', bugCategories );
+router.use( '/processmetrics/bug_severities', bugCategories );
 router.use( '/processmetrics/bug_status', bugStatus );
 router.use( '/processmetrics/comments_user', commentsUser );
 router.use( '/processmetrics/bugs_attribute', bugsAttr );

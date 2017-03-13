@@ -1,6 +1,7 @@
 var config = require('../../config/config');
 var hbs = require('hbs');
 var Util = require('../../helpers/util');
+var Common = require( '../common/Common' );
 var Promise = require('bluebird');
 
 // load the modern build
@@ -97,67 +98,105 @@ var Bug = {
     return { data: data, total: totalAmount };
   },
 
-  calcBoxPlotData( parsedData ) {
-    console.log( "=======parsedData================" );
-    console.log( parsedData.series[ 0 ] );
-    console.log( "=================================" );
-    var numberOfBoxes = 1;
-    var boxPlotData = {
-      boxData: [ ],
-      meanData: [ ]
-    };
+  // calcBoxPlotData( parsedData ) {
+  //   console.log( "=======parsedData================" );
+  //   console.log( parsedData.series[ 0 ] );
+  //   console.log( "=================================" );
+  //   var numberOfBoxes = 1;
+  //   var boxPlotData = {
+  //     boxData: [ ],
+  //     meanData: [ ]
+  //   };
 
-    var boxData  = [ ];
-    var meanData = [ ];
+  //   var boxData  = [ ];
+  //   var meanData = [ ];
 
-    for(var i = 0; i < numberOfBoxes; i++) {
-      var data = [ ];
-      var boxValues  = Bug.getBoxValues( data );
+  //   for(var i = 0; i < numberOfBoxes; i++) {
+  //     var data = [ ];
+  //     var boxValues  = Bug.getBoxValues( data );
 
-      boxPlotData.boxData.push( boxValues );
-      boxPlotData.meanData.push( Bug.mean( data ) );
+  //     boxPlotData.boxData.push( boxValues );
+  //     boxPlotData.meanData.push( Bug.mean( data ) );
+  //   }
+
+  //   return boxPlotData;
+  // },
+
+  // getBoxValues( data ) {
+  //   var boxValues = { };
+
+  //   boxValues.low = Math.min.apply( Math, data );
+  //   boxValues.q1 = Bug.getPercentile( data, 25 );
+  //   boxValues.median = Bug.getPercentile( data, 50 );
+  //   boxValues.q3 = Bug.getPercentile( data, 75 );
+  //   boxValues.high = Math.max.apply( Math, data );
+
+  //   return boxValues;
+  // },
+
+  // getPercentile( data, percentile ) {
+  //   data.sort( );
+
+  //   var index = ( percentile / 100 ) * data.length;
+  //   var result;
+
+  //   if( Math.floor( index ) == index ) {
+  //     result = ( data[ ( index - 1 ) ] + data[ index ] ) / 2;
+  //   }
+  //   else {
+  //     result = data[ Math.floor( index ) ];
+  //   }
+
+  //   return result;
+  // },
+
+  // mean( data ) {
+  //   var len = data.length;
+  //   var sum = 0;
+
+  //   for(var i = 0; i < len; i++) {
+  //     sum += parseFloat( data[ i ] );
+  //   }
+
+  //   return (sum / len);
+  // },
+
+  getCommentsPerUserQuery( chartType ) {
+    let select = `
+      SELECT
+        Severity.name as category,
+        COUNT(DISTINCT(Comments.id)) as amount,
+        Comments.creation,
+        CAST(strftime('%m', Comments.creation) AS INTEGER) as month
+    `;
+
+    if( chartType === "boxplot" ) {
+      select = `
+        ${select},
+        b.comments,
+        AVG(b.comments) as avg,
+        MEDIAN(b.comments) as median,
+        LOWER_QUARTILE(b.comments) as q1,
+        UPPER_QUARTILE(b.comments) as q3,
+        MIN(b.comments) as min,
+        MAX(b.comments) as max
+      `;
     }
-
-    return boxPlotData;
-  },
-
-  getBoxValues( data ) {
-    var boxValues = { };
-
-    boxValues.low = Math.min.apply( Math, data );
-    boxValues.q1 = Bug.getPercentile( data, 25 );
-    boxValues.median = Bug.getPercentile( data, 50 );
-    boxValues.q3 = Bug.getPercentile( data, 75 );
-    boxValues.high = Math.max.apply( Math, data );
-
-    return boxValues;
-  },
-
-  getPercentile( data, percentile ) {
-    data.sort( );
-
-    var index = ( percentile / 100 ) * data.length;
-    var result;
-
-    if( Math.floor( index ) == index ) {
-      result = ( data[ ( index - 1 ) ] + data[ index ] ) / 2;
+    
+    return {
+      select,
+      fromTables: `
+        FROM
+          Severity, Bugs b, Components, Comments
+      `,
+      conditions: `
+        WHERE
+          Comments.bug = b.id
+          AND Components.id = b.component
+          AND Components.project = ?
+          AND Severity.id = b.severity
+      `
     }
-    else {
-      result = data[ Math.floor( index ) ];
-    }
-
-    return result;
-  },
-
-  mean( data ) {
-    var len = data.length;
-    var sum = 0;
-
-    for(var i = 0; i < len; i++) {
-      sum += parseFloat( data[ i ] );
-    }
-
-    return (sum / len);
   },
 
   getBugcatsPerAuthor( currentSettings, chartType ) {
@@ -172,6 +211,10 @@ var Bug = {
         //   reject( "Please select a user!" );
         // } else {
           params = [ currentSettings.pid ];
+
+          if( currentSettings.dict && currentSettings.dict > 0 ) {
+            params.push( currentSettings.dict );
+          }
 
           if( currentSettings.year !== "all" ) {
             if( currentSettings.uid < 0 ) {
@@ -370,16 +413,15 @@ var Bug = {
         } else if( currentSettings.uid == null ) {
           reject( "Please select a user!" );
         } else {
-          query = "SELECT "
-            + " Severity.name as category, COUNT(DISTINCT(Comments.id)) as amount, Comments.creation, "
-            + " CAST(strftime('%m', Comments.creation) AS INTEGER) as month "
-            + "FROM "
-            + " Severity, Bugs, Components, Comments "
-            + "WHERE "
-            + " Comments.bug = Bugs.id "
-            + " AND Components.id = Bugs.component "
-            + " AND Components.project = ?   "
-            + " AND Severity.id = Bugs.severity ";
+          var chartType = currentSettings.pmSettings.charttype || {};
+          var { select, fromTables, conditions } = Bug.getCommentsPerUserQuery( chartType );
+
+          var filter = currentSettings.pmSettings.filter || {};
+          var filterCondition = Common.getBugFilterCondition( filter );
+
+          var query = select + fromTables + conditions;
+          query = `${query} ${filterCondition}`;
+
           params = [ currentSettings.pid ];
 
           if( currentSettings.year !== "all" ) {
@@ -388,24 +430,162 @@ var Bug = {
               params.push( currentSettings.year );
             } else {
               query += " AND CAST(strftime('%Y', Comments.creation) AS INTEGER) = ? "
-                + " AND Bugs.identity = ? ";
+                + " AND b.identity = ? ";
               params.push( currentSettings.year );
               params.push( currentSettings.uid );
             }
           } else {
             if( currentSettings.uid > 0 ) {
-              query += " AND Bugs.identity = ? ";
+              query += " AND b.identity = ? ";
               params.push( currentSettings.uid );
             } else {
               // default query
             }
           }
 
-          if( currentSettings.pmSettings.openclosed &&
-            currentSettings.pmSettings.openclosed !== "both" ) {
+          if( chartType === "boxplot" ) {
+            const attribute = "b.comments";
 
-            query += " AND Bugs.isOpen = ? ";
-            params.push( currentSettings.pmSettings.openclosed );
+            db.serialize( ( ) => {
+              db.get( query, params, function( err, record ) {
+                if( err ) {
+                  console.log( err );
+                  reject( err );
+                }
+
+                if( record.amount > 0 ) {
+                  var chartData = {};
+
+                  console.log( "====================chartData===================" );
+                  console.log( record );
+                  
+                  var parsedData = Common.buildBoxPlotData( record, { name: "Comments" } );
+                  var q = Common.getMaxOutliers( fromTables, conditions, params, record, attribute );
+
+                  db.all( q, params, ( err, maxOutliers ) => {
+                    let mol = [];
+
+                    _.each( maxOutliers, ( mo ) => {
+                      mol.push( [ 0, mo.max ] );
+                    } );
+
+                    parsedData.series[ 0 ].data[ 0 ][ 4 ] = Common.getOutlierFences( record ).outlierMax;
+
+                    parsedData.series.push( {
+                      name: 'Outlier',
+                      color: '#7cb5ec',
+                      type: 'scatter',
+                      data: mol,
+                      marker: {
+                          fillColor: 'white',
+                          lineWidth: 1,
+                          lineColor: '#7cb5ec'
+                      },
+                      tooltip: {
+                        pointFormat: `Comments: {point.y}`
+                      }
+                    } );
+
+                    const category = "";
+
+                    chartData = Common.buildHighchartsBoxPlotObj( {
+                      series: parsedData.series,
+                      title: "Comments per user",
+                      xAxisTitle: "",
+                      category,
+                      attribute: "Comments",
+                      meanData: parsedData.meanData
+                    } );
+
+                    resolve( chartData );
+                  } );
+                } else {
+                  reject( "Couldn't find any information with current settings!" );
+                }
+              } ) ;
+            } );
+          } else {
+            query += " GROUP BY strftime('%Y-%m-%d', Comments.creation) ";
+
+            db.all( query, params, function( err, cats ) {
+              if( err ) {
+                console.log( err );
+                reject( err );
+              }
+
+              if( cats.length > 0 ) {
+                var parsedData = Bug.parseBugcatsData( cats, currentSettings.year );
+
+                var chartData = {
+                  series: parsedData.series,
+                  title: {
+                    text: "Comments"
+                  },
+                  subtitle: {
+                    text: currentSettings.year + " total: " + parsedData.total
+                  },
+                  yAxis: {
+                    title: {
+                      text: "Comments"
+                    }
+                  }
+                };
+
+                resolve( chartData );
+              } else {
+                reject( "Couldn't find any bugs for user '" + currentSettings.uname
+                  + "'. Try to change the filters (project, dictionary, year)!" );
+              }
+            } ) ;            
+          }
+        }
+      } else {
+        reject( "Please select a project!" );
+      }
+    } );
+
+    return commentsPerUserPromise;
+  },
+
+  getBugsWithAttributes( currentSettings ) {
+    var bugsWithAttributes = new Promise( function( resolve, reject ) {
+      var query = "";
+      var params = [ ];
+
+      if( currentSettings && currentSettings.project && currentSettings.project.id ) {
+        if( currentSettings.dict == null ) {
+          reject( "Please select a 'bug' dictionary!" );
+        } else if( currentSettings.uid == null ) {
+          reject( "Please select a user!" );
+        } else {
+          var chartType = currentSettings.pmSettings.charttype || {};
+          var { select, fromTables, conditions } = Bug.getCommentsPerUserQuery( chartType );
+
+          var filter = currentSettings.pmSettings.filter || {};
+          var filterCondition = Common.getBugFilterCondition( filter );
+
+          var query = select + fromTables + conditions;
+          query = `${query} ${filterCondition}`;
+
+          params = [ currentSettings.pid ];
+
+          if( currentSettings.year !== "all" ) {
+            if( currentSettings.uid < 0 ) {
+              query += " AND CAST(strftime('%Y', Comments.creation) AS INTEGER) = ? ";
+              params.push( currentSettings.year );
+            } else {
+              query += " AND CAST(strftime('%Y', Comments.creation) AS INTEGER) = ? "
+                + " AND b.identity = ? ";
+              params.push( currentSettings.year );
+              params.push( currentSettings.uid );
+            }
+          } else {
+            if( currentSettings.uid > 0 ) {
+              query += " AND b.identity = ? ";
+              params.push( currentSettings.uid );
+            } else {
+              // default query
+            }
           }
 
           query += " GROUP BY strftime('%Y-%m-%d', Comments.creation) ";
@@ -419,20 +599,17 @@ var Bug = {
             if( cats.length > 0 ) {
               var parsedData = Bug.parseBugcatsData( cats, currentSettings.year );
 
-              var boxPlotData = Bug.calcBoxPlotData( parsedData );
-              console.log( boxPlotData );
-
               var chartData = {
                 series: parsedData.series,
                 title: {
-                  text: "Comments"
+                  text: "Bugs"
                 },
                 subtitle: {
                   text: currentSettings.year + " total: " + parsedData.total
                 },
                 yAxis: {
                   title: {
-                    text: "Comments"
+                    text: "Bugs amount"
                   }
                 }
               };
@@ -442,14 +619,15 @@ var Bug = {
               reject( "Couldn't find any bugs for user '" + currentSettings.uname
                 + "'. Try to change the filters (project, dictionary, year)!" );
             }
-          } ) ;
+          } ) ;            
         }
+
       } else {
         reject( "Please select a project!" );
       }
     } );
 
-    return commentsPerUserPromise;
+    return bugsWithAttributes;
   },
 
   getPatchesPerUser( currentSettings ) {

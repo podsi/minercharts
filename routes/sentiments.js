@@ -4,6 +4,8 @@ var nconf = require('nconf');
 var config = require('../config/config');
 var hbs = require('hbs');
 var Util = require('../helpers/util');
+var Sentiment = require('../models/sentiments/Sentiment');
+var Common = require('../models/common/Common');
 var Promise = require('bluebird');
 
 // load the modern build
@@ -26,11 +28,18 @@ router.post( '/load', function( req, res, next ) {
 
   var data = { };
   var pmBody = "";
+  var dictContext;
+
+  if( currentView.tab === "comsentiment" ) {
+    dictContext = "src";
+  } else {
+    dictContext = "bug";
+  }
 
   if( project && project.dictionary &&
-    project.dictionary.context !== "src" && project.dictionary.context !== "all" ) {
+    project.dictionary.context !== dictContext && project.dictionary.context !== "all" ) {
 
-    data.message = "No data for current dictionary! Use a 'src' dictionary!";
+    data.message = `No data for current dictionary! Use a '${dictContext}' dictionary!`;
 
     uiSettings.partials.pmBody = Util.getPartialByName( "info", data );
 
@@ -49,20 +58,59 @@ router.post( '/load', function( req, res, next ) {
     pmBody = Util.getPartialByName( "sentiments_tabs", data );
 
     var usersPromise = getUsers( project, currentView );
-    var catsPromise = getCategories( project, currentView );
-    var users = { };
-    var cats = { };
+    var promises = [ ];
 
-    Promise.all( [ usersPromise, catsPromise ] ).then( values => {
-      users = values[ 0 ];
-      cats = values[ 1 ];
+    if( currentView.tab === "bugcommentsentiment" ) {
+      var prioritiesP = Common.getPriorities( project );
+      var severitiesP = Common.getSeverities( project );
+      var resolutionsP = Common.getResolutions( project );
+      var opsysP = Common.getOperationSystems( project );
+      var platformsP = Common.getPlatforms( project );
+      var versionsP = Common.getVersions( project );
+
+      promises = [ usersPromise, prioritiesP, severitiesP, resolutionsP, opsysP, platformsP, versionsP ];
+    } else {
+      promises = [ usersPromise ];
+    }
+
+    Promise.all( promises ).then( values => {
+      var users = values[ 0 ];
+
+      if( currentView.tab === "bugcommentsentiment" && values.length > 1 ) {
+        var priorities = values[ 1 ];
+        var severities = values[ 2 ];
+        var resolutions = values[ 3 ];
+        var opsys = values[ 4 ];
+        var platforms = values[ 5 ];
+        var versions = values[ 6 ];
+
+        if( priorities && priorities.length > 0 ) {
+          uiSettings.partials.priorities = Util.getPartialByName( "priorities", { priorities: priorities } );
+        }
+
+        if( severities && severities.length > 0 ) {
+          uiSettings.partials.severities = Util.getPartialByName( "severities", { severities: severities } );
+        }
+
+        if( resolutions && resolutions.length > 0 ) {
+          uiSettings.partials.resolutions = Util.getPartialByName( "resolutions", { resolutions: resolutions } );
+        }
+
+        if( opsys && opsys.length > 0 ) {
+          uiSettings.partials.opsys = Util.getPartialByName( "opsys", { opsys: opsys } );
+        }
+
+        if( platforms && platforms.length > 0 ) {
+          uiSettings.partials.platforms = Util.getPartialByName( "platforms", { platforms: platforms } );
+        }
+
+        if( versions && versions.length > 0 ) {
+          uiSettings.partials.versions = Util.getPartialByName( "versions", { versions: versions } );
+        }
+      }
 
       if( users && users.length > 0 ) {
         uiSettings.partials.users = Util.getPartialByName( "users", { users: users } );
-      }
-
-      if( cats && cats.length > 0 ) {
-        uiSettings.partials.cats = Util.getPartialByName( "categories", { cats: cats } );
       }
 
       uiSettings.partials.pmBody = pmBody;
@@ -106,6 +154,8 @@ function getCategories( project, currentView ) {
         var params = catsQuery.params || [ ];
 
         var query = select + conditions + end;
+        console.log( "=======queryyyyyyyyyyy=======================" );
+        console.log( query );
 
         if( query.length > 0 && params.length > 0 ) {
           db.all( query, params, function( err, cats ) {
@@ -131,20 +181,43 @@ function getCategories( project, currentView ) {
 };
 
 function getCatsQuery( project, currentView ) {
-  var query = {
-    select: "SELECT "
-      + " Categories.id, Categories.name "
-      + "FROM "
-      + " Commits, CommitCategories, Categories, Dictionary ",
-    conditions: "WHERE "
-      + " Commits.id=CommitCategories.commitId "
-      + " AND CommitCategories.category=Categories.id "
-      + " AND Commits.project = ? "
-      + " AND Categories.dictionary = ? ",
-    params: [ project.id, project.dictionary.id ]
-  };
+  switch( currentView.tab ) {
+    case "comsentiment":
+      var query = {
+        select: `SELECT
+          Categories.id, Categories.name
+          FROM
+          Commits, CommitCategories, Categories, Dictionary`,
+        conditions: `
+          WHERE
+            Commits.id=CommitCategories.commitId
+            AND CommitCategories.commitId=Categories.id
+            AND Commits.project = ?
+            AND Categories.dictionary = ? `,
+        params: [ project.id, project.dictionary.id ]
+      };
 
-  query.end = " GROUP BY CommitCategories.category ";
+      query.end = "GROUP BY CommitCategories.commitId";
+      break;
+    case "bugcommentsentiment":
+      var query = {
+        select: `SELECT 
+          Categories.id, Categories.name
+          FROM 
+          Bugs, BugCategories, Categories, Components`,
+        conditions: `
+        WHERE
+          Bugs.id = BugCategories.bug
+          AND BugCategories.category = Categories.id
+          AND Components.id = Bugs.component
+          AND Components.project = ?
+          AND Categories.dictionary = ?`,
+        params: [ project.id, project.dictionary.id ]
+      };
+
+      query.end = " GROUP BY BugCategories.category ";
+      break;      
+  }
 
   return query;
 };
@@ -186,7 +259,7 @@ function getUserQuery( project, tab ) {
   var defaults = getUserQueryDefaults( project, tab );
 
   switch( tab ) {
-    case "comsentiment":
+    case "comsentiment" || "bugcommentsentiment":
       if( project.dictionary && project.dictionary.context != "all" ) {
         if( project.year && project.year != "all" ) {
           defaults.query += " AND cat.dictionary = ? "
@@ -234,8 +307,24 @@ function getUserQueryDefaults( project, tab ) {
 
     defaults.params = [ project.id ];
   }
-  else if( tab === "commodule" ) {
-    // TODO
+  else if( tab === "bugcommentsentiment" ) {
+    defaults.query = `SELECT DISTINCT u.name as username, 
+      u.id as uid,
+      i.id as iid,
+      i.name as iname,
+      i.context as icontext
+      FROM
+      Users u, Identities i, Bugs b, Categories cat, BugCategories bc, Comments, Sentiment s, BugCommentSentiment bcs, Projects p
+      WHERE u.id = i.user
+      AND b.id = bc.bug
+      AND b.id = Comments.bug
+      AND b.identity = i.id
+      AND bcs.sentimentId = s.id
+      AND bcs.commentId = Comments.id 
+      AND cat.id = bc.category
+      AND p.id = ?`
+
+    defaults.params = [ project.id ];
   }
   // else if( tab === "comsentiment" ) {
   //   // TODO

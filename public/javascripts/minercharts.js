@@ -136,9 +136,9 @@ var app = (function($) {
           }
 
           if( data.success === false ) {
-
+            
             // success false
-            if( options.error ) {
+            if( typeof( options.error ) === 'function' ) {
               options.error( data );
             }
 
