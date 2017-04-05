@@ -182,7 +182,7 @@ var Bug = {
         MAX(b.comments) as max
       `;
     }
-    
+
     return {
       select,
       fromTables: `
@@ -193,6 +193,30 @@ var Bug = {
         WHERE
           Comments.bug = b.id
           AND Components.id = b.component
+          AND Components.project = ?
+          AND Severity.id = b.severity
+      `
+    }
+  },
+
+  getBugAttributesPerUserQuery( chartType ) {
+    let select = `
+      SELECT
+        Severity.name as category,
+        COUNT(DISTINCT(b.id)) as amount,
+        b.creation,
+        CAST(strftime('%m', b.creation) AS INTEGER) as month
+    `;
+
+    return {
+      select,
+      fromTables: `
+        FROM
+          Severity, Bugs b, Components
+      `,
+      conditions: `
+        WHERE
+          Components.id = b.component
           AND Components.project = ?
           AND Severity.id = b.severity
       `
@@ -458,7 +482,7 @@ var Bug = {
 
                   console.log( "====================chartData===================" );
                   console.log( record );
-                  
+
                   var parsedData = Common.buildBoxPlotData( record, { name: "Comments" } );
                   var q = Common.getMaxOutliers( fromTables, conditions, params, record, attribute );
 
@@ -536,7 +560,7 @@ var Bug = {
                 reject( "Couldn't find any bugs for user '" + currentSettings.uname
                   + "'. Try to change the filters (project, dictionary, year)!" );
               }
-            } ) ;            
+            } ) ;
           }
         }
       } else {
@@ -559,7 +583,7 @@ var Bug = {
           reject( "Please select a user!" );
         } else {
           var chartType = currentSettings.pmSettings.charttype || {};
-          var { select, fromTables, conditions } = Bug.getCommentsPerUserQuery( chartType );
+          var { select, fromTables, conditions } = Bug.getBugAttributesPerUserQuery( chartType );
 
           var filter = currentSettings.pmSettings.filter || {};
           var filterCondition = Common.getBugFilterCondition( filter );
@@ -571,10 +595,10 @@ var Bug = {
 
           if( currentSettings.year !== "all" ) {
             if( currentSettings.uid < 0 ) {
-              query += " AND CAST(strftime('%Y', Comments.creation) AS INTEGER) = ? ";
+              query += " AND CAST(strftime('%Y', b.creation) AS INTEGER) = ? ";
               params.push( currentSettings.year );
             } else {
-              query += " AND CAST(strftime('%Y', Comments.creation) AS INTEGER) = ? "
+              query += " AND CAST(strftime('%Y', b.creation) AS INTEGER) = ? "
                 + " AND b.identity = ? ";
               params.push( currentSettings.year );
               params.push( currentSettings.uid );
@@ -588,7 +612,7 @@ var Bug = {
             }
           }
 
-          query += " GROUP BY strftime('%Y-%m-%d', Comments.creation) ";
+          query += " GROUP BY strftime('%Y-%m-%d', b.creation) ";
 
           db.all( query, params, function( err, cats ) {
             if( err ) {
@@ -619,7 +643,7 @@ var Bug = {
               reject( "Couldn't find any bugs for user '" + currentSettings.uname
                 + "'. Try to change the filters (project, dictionary, year)!" );
             }
-          } ) ;            
+          } ) ;
         }
 
       } else {
